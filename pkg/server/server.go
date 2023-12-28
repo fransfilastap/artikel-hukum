@@ -1,8 +1,10 @@
 package server
 
-import "time"
+import (
+	"context"
+)
 
 type Server interface {
 	Start() error
-	ShutDown(killTime time.Duration) error
+	ShutDown(ctx context.Context) error
 }

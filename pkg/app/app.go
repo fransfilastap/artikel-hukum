@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 type App struct {
@@ -67,7 +66,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	// Gracefully stop the servers
 	for _, srv := range a.servers {
-		err := srv.ShutDown(5 * time.Second)
+		err := srv.ShutDown(ctx)
 		if err != nil {
 			log.Printf("Server stop err: %v", err)
 		}
