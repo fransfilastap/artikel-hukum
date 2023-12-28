@@ -1,1 +1,2 @@
 config/prod.yml
+storage/logs/*.log
