@@ -8,7 +8,6 @@ import (
 )
 
 func SetupMiddleware(viper *viper.Viper, logger *log.Logger, e *echo.Echo) {
-	// register middlewares
 	e.Use(middleware.RequestLoggerWithConfig(RequestLoggerMiddleware(logger)))
 	e.Use(middleware.CORS())
 }

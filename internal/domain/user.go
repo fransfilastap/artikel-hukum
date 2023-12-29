@@ -9,10 +9,10 @@ type Role string
 type UserID uint
 
 var (
-	Admin       Role = "admin"
-	Editor      Role = "editor"
-	Contributor Role = "author"
-	NoRole      Role = "no-role"
+	Admin  Role = "admin"
+	Editor Role = "editor"
+	Author Role = "author"
+	NoRole Role = "no-role"
 )
 
 type User struct {

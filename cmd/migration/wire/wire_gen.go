@@ -8,7 +8,7 @@ package wire
 
 import (
 	"bphn/artikel-hukum/internal/repository"
-	"bphn/artikel-hukum/internal/server/migration"
+	"bphn/artikel-hukum/internal/server"
 	"bphn/artikel-hukum/pkg/app"
 	"bphn/artikel-hukum/pkg/log"
 	"github.com/google/wire"
@@ -19,7 +19,7 @@ import (
 
 func InitializeMigration(viper2 *viper.Viper, logger *log.Logger) (*app.App, func(), error) {
 	db := repository.NewDB(viper2, logger)
-	migration := migration.NewMigration(db, logger)
+	migration := server.NewMigration(db, logger)
 	appApp := newApp(migration)
 	return appApp, func() {
 	}, nil
@@ -29,6 +29,6 @@ func InitializeMigration(viper2 *viper.Viper, logger *log.Logger) (*app.App, fun
 
 var repositorySet = wire.NewSet(repository.NewDB, repository.NewRepository)
 
-func newApp(migration *migration.Migration) *app.App {
+func newApp(migration *server.Migration) *app.App {
 	return app.NewApp(app.WithName("database-migration"), app.WithServer(migration))
 }

@@ -7,10 +7,10 @@
 package wire
 
 import (
-	http2 "bphn/artikel-hukum/internal/server/http"
+	"bphn/artikel-hukum/internal/server"
 	"bphn/artikel-hukum/pkg/app"
 	"bphn/artikel-hukum/pkg/log"
-	"bphn/artikel-hukum/pkg/server/http"
+	server2 "bphn/artikel-hukum/pkg/server"
 	"github.com/google/wire"
 	"github.com/spf13/viper"
 )
@@ -18,7 +18,7 @@ import (
 // Injectors from wire.go:
 
 func InitializeApp(viper2 *viper.Viper, logger *log.Logger) (*app.App, func(), error) {
-	httpServer := http2.NewHttpServer(viper2, logger)
+	httpServer := server.NewHttpServer(viper2, logger)
 	appApp := newServer(httpServer)
 	return appApp, func() {
 	}, nil
@@ -26,8 +26,8 @@ func InitializeApp(viper2 *viper.Viper, logger *log.Logger) (*app.App, func(), e
 
 // wire.go:
 
-var serverSet = wire.NewSet(http2.NewHttpServer)
+var serverSet = wire.NewSet(server.NewHttpServer)
 
-func newServer(httpServer *http.Server) *app.App {
+func newServer(httpServer *server2.HttpServer) *app.App {
 	return app.NewApp(app.WithServer(httpServer), app.WithName("artikel-hukum-api"))
 }

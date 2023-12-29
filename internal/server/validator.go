@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"github.com/go-playground/validator"
@@ -6,12 +6,12 @@ import (
 	"net/http"
 )
 
-type Validator struct {
-	validator *validator.Validate
+type CValidator struct {
+	Validator *validator.Validate
 }
 
-func (v *Validator) Validate(i interface{}) error {
-	if err := v.validator.Struct(i); err != nil {
+func (v *CValidator) Validate(i interface{}) error {
+	if err := v.Validator.Struct(i); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return nil

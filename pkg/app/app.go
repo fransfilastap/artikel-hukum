@@ -50,7 +50,7 @@ func (a *App) Run(ctx context.Context) error {
 		go func(srv server.Server) {
 			err := srv.Start()
 			if err != nil {
-				log.Printf("Server start err: %v", err)
+				log.Printf("HttpServer start err: %v", err)
 			}
 		}(srv)
 	}
@@ -68,7 +68,7 @@ func (a *App) Run(ctx context.Context) error {
 	for _, srv := range a.servers {
 		err := srv.ShutDown(ctx)
 		if err != nil {
-			log.Printf("Server stop err: %v", err)
+			log.Printf("HttpServer stop err: %v", err)
 		}
 	}
 

@@ -1,4 +1,4 @@
-package migration
+package server
 
 import (
 	"bphn/artikel-hukum/internal/domain"
