@@ -4,7 +4,7 @@
 package wire
 
 import (
-	"bphn/artikel-hukum/internal/server"
+	http2 "bphn/artikel-hukum/internal/server/http"
 	"bphn/artikel-hukum/pkg/app"
 	"bphn/artikel-hukum/pkg/log"
 	"bphn/artikel-hukum/pkg/server/http"
@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var serverSet = wire.NewSet(server.NewHttpServer)
+var serverSet = wire.NewSet(http2.NewHttpServer)
 
 func newServer(httpServer *http.Server) *app.App {
 	return app.NewApp(app.WithServer(httpServer), app.WithName("artikel-hukum-api"))

@@ -1,8 +1,8 @@
-package server
+package http
 
 import (
-	"bphn/artikel-hukum/internal/handler"
-	mddlware "bphn/artikel-hukum/internal/middleware"
+	httphandler "bphn/artikel-hukum/internal/handler/http"
+	custommiddlerware "bphn/artikel-hukum/internal/middleware"
 	"bphn/artikel-hukum/pkg/log"
 	"bphn/artikel-hukum/pkg/server/http"
 	"github.com/labstack/echo/v4"
@@ -16,10 +16,17 @@ func NewHttpServer(viper *viper.Viper, logger *log.Logger) *http.Server {
 	port := viper.GetInt("http.port")
 
 	// register middlewares
-	e.Use(middleware.RequestLoggerWithConfig(mddlware.RequestLoggerMiddleware(logger)))
+	e.Use(middleware.RequestLoggerWithConfig(custommiddlerware.RequestLoggerMiddleware(logger)))
 	e.Use(middleware.CORS())
 
-	e.GET("/", handler.Default)
+	// default handler
+	e.GET("/", httphandler.Default)
+
+	// api group handler
+	/*	apiRoute := e.Group("/api")*/
+
+	//user group handler
+	/*userRoute := apiRoute.GET("/users", hand)*/
 
 	// create http server
 	s := http.NewServer(e, logger, http.WithServerHost(host), http.WithServerPort(port))
