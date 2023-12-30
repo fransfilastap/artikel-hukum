@@ -16,8 +16,9 @@ func SetupRoutes(e *echo.Echo, logger *log.Logger, userService service.UserServi
 	// api group handler
 	apiRoute := e.Group("/api")
 
-	userDataRequestHandler := NewUserRequestHandler(handler, userService)
+	userDataRequestHandler := NewUserManagementHandler(handler, userService)
 
 	//user group handler
 	apiRoute.GET("/users", userDataRequestHandler.List)
+	apiRoute.POST("/users", userDataRequestHandler.Create)
 }

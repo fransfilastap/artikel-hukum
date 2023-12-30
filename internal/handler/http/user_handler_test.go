@@ -3,21 +3,20 @@ package http
 import (
 	"bphn/artikel-hukum/api"
 	"bphn/artikel-hukum/internal/middleware"
-	internalhttp "bphn/artikel-hukum/internal/server"
+	"bphn/artikel-hukum/internal/server"
 	mockservice "bphn/artikel-hukum/internal/service/mocks"
 	"bphn/artikel-hukum/pkg/config"
 	"bphn/artikel-hukum/pkg/log"
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -40,7 +39,8 @@ func TestMain(m *testing.M) {
 	handler = &Handler{logger}
 
 	e = echo.New()
-	e.Validator = &internalhttp.CValidator{Validator: validator.New()}
+	server.SetupValidator(e)
+
 	// register middlewares
 	middleware.SetupMiddleware(conf, logger, e)
 
@@ -52,6 +52,67 @@ func TestMain(m *testing.M) {
 	fmt.Println("test end")
 
 	os.Exit(code)
+
+}
+
+func TestUserRequestHandler_Create(t *testing.T) {
+
+	t.Run("Success  create user, return http code 200, no error", func(t *testing.T) {
+
+		userRequest := api.CreateUserRequest{
+			FullName: "John Snow",
+			Email:    "snow@mail.com",
+			Password: "12345678",
+			Role:     "editor",
+		}
+
+		userRequestJSON, _ := json.Marshal(userRequest)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewReader(userRequestJSON))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockService := mockservice.NewMockUserService(ctrl)
+		mockService.EXPECT().Create(c.Request().Context(), gomock.Any()).Return(nil).AnyTimes()
+
+		userHandler := NewUserManagementHandler(handler, mockService)
+
+		if assert.NoError(t, userHandler.Create(c)) {
+			assert.Equal(t, http.StatusCreated, rec.Code)
+		}
+
+	})
+
+	t.Run("Validation error while create user", func(t *testing.T) {
+		userRequest := api.CreateUserRequest{
+			FullName: "John Snow",
+			Email:    "mail@johnsnow.techx",
+			Password: "123456",
+			Role:     "editor",
+		}
+
+		userRequestJSON, _ := json.Marshal(userRequest)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewReader(userRequestJSON))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockService := mockservice.NewMockUserService(ctrl)
+		mockService.EXPECT().Create(c.Request().Context(), gomock.Any()).Return(nil).AnyTimes()
+
+		userHandler := NewUserManagementHandler(handler, mockService)
+
+		assert.Error(t, userHandler.Create(c))
+
+	})
 
 }
 
@@ -89,7 +150,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 		},
 	}, nil).AnyTimes()
 
-	userHandler := NewUserRequestHandler(handler, mockUserService)
+	userHandler := NewUserManagementHandler(handler, mockUserService)
 
 	err := userHandler.List(c)
 	if err != nil {
@@ -107,26 +168,51 @@ func TestUserRequestHandler_List(t *testing.T) {
 	assert.Equal(t, len(users), 3)
 }
 
-func TestUserRequestHandler_Create(t *testing.T) {
+func TestUserManagementHandler_Update(t *testing.T) {
+	userUpdateRequest := api.UpdateUserRequest{
+		FullName: "John Snow",
+		Email:    "mail@johnsnow.techx",
+		Role:     "editor",
+	}
 
-	t.Run("Validation error while create user", func(t *testing.T) {
-		userJSON := `{"full_name":"Jon Snow","email":"jon@labstack.com","password":"123456","role":"editor"}`
-		req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader(userJSON))
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+	userJSON, _ := json.Marshal(userUpdateRequest)
 
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	req := httptest.NewRequest(http.MethodPut, "/api/users/1", bytes.NewReader(userJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
 
-		mockService := mockservice.NewMockUserService(ctrl)
-		mockService.EXPECT().Create(c.Request().Context(), gomock.Any()).Return(nil).AnyTimes()
+	ctrl := gomock.NewController(t)
 
-		userHandler := NewUserRequestHandler(handler, mockService)
+	mockUserService := mockservice.NewMockUserService(ctrl)
+	mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-		err := userHandler.Create(c)
+	userHandler := NewUserManagementHandler(handler, mockUserService)
+	err := userHandler.Update(c)
 
-		assert.Error(t, err)
+	assert.NoError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
 
-	})
+}
 
+func TestUserManagementHandler_Delete(t *testing.T) {
+	req := httptest.NewRequest(http.MethodDelete, "/api/users/12", nil)
+	res := httptest.NewRecorder()
+
+	ctx := e.NewContext(req, res)
+	ctx.SetPath("/api/users/:id")
+	ctx.SetParamNames("id")
+	ctx.SetParamValues("12")
+
+	ctrl := gomock.NewController(t)
+
+	mockUserService := mockservice.NewMockUserService(ctrl)
+	mockUserService.EXPECT().Delete(gomock.Any(), uint(12)).Return(nil).AnyTimes()
+
+	userHandler := NewUserManagementHandler(handler, mockUserService)
+
+	if assert.NoError(t, userHandler.Delete(ctx)) {
+		assert.Equal(t, http.StatusNoContent, res.Code)
+		assert.Equal(t, "", res.Body.String())
+	}
 }

@@ -41,7 +41,7 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockUserService) Create(ctx context.Context, request *api.AdminCreateUserRequest) error {
+func (m *MockUserService) Create(ctx context.Context, request *api.CreateUserRequest) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, request)
 	ret0, _ := ret[0].(error)
@@ -52,6 +52,20 @@ func (m *MockUserService) Create(ctx context.Context, request *api.AdminCreateUs
 func (mr *MockUserServiceMockRecorder) Create(ctx, request any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserService)(nil).Create), ctx, request)
+}
+
+// Delete mocks base method.
+func (m *MockUserService) Delete(ctx context.Context, request uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, request)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockUserServiceMockRecorder) Delete(ctx, request any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUserService)(nil).Delete), ctx, request)
 }
 
 // List mocks base method.
@@ -67,4 +81,18 @@ func (m *MockUserService) List(ctx context.Context) ([]api.UserDataResponse, err
 func (mr *MockUserServiceMockRecorder) List(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockUserService)(nil).List), ctx)
+}
+
+// Update mocks base method.
+func (m *MockUserService) Update(ctx context.Context, request *api.UpdateUserRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, request)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockUserServiceMockRecorder) Update(ctx, request any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUserService)(nil).Update), ctx, request)
 }

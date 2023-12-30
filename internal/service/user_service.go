@@ -8,7 +8,9 @@ import (
 
 type UserService interface {
 	List(ctx context.Context) ([]api.UserDataResponse, error)
-	Create(ctx context.Context, request *api.AdminCreateUserRequest) error
+	Create(ctx context.Context, request *api.CreateUserRequest) error
+	Update(ctx context.Context, request *api.UpdateUserRequest) error
+	Delete(ctx context.Context, request uint) error
 }
 
 type userService struct {

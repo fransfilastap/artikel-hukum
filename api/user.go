@@ -13,19 +13,24 @@ type UserListResponse struct {
 	data *[]UserDataResponse
 }
 
-type MustHaveUserTrait struct {
+type CreateUserRequest struct {
 	FullName string `json:"full_name" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
+	Role     string `json:"role" validate:"required"`
 }
 
-type AdminCreateUserRequest struct {
-	*MustHaveUserTrait
-	Password string `json:"password" validate:"required,min:"`
-	Role     string `json:"role" validate:"required,oneof=admin author editor"`
+type UpdateUserRequest struct {
+	FullName             string `json:"full_name" validate:"required"`
+	Email                string `json:"email" validate:"required,email"`
+	Password             string `json:"password" validate:"omitempty,min=8"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"omitempty,min=8,eqfield=Password"`
+	Role                 string `json:"role" validate:"required"`
 }
 
 type AuthorRegistrationRequest struct {
-	*MustHaveUserTrait
+	FullName   string `json:"full_name" validate:"required"`
+	Email      string `json:"email" validate:"required,email"`
 	Occupation string `json:"occupation" validate:"required"`
 	Company    string `json:"company" validate:"required"`
 }

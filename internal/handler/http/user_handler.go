@@ -3,20 +3,22 @@ package http
 import (
 	"bphn/artikel-hukum/api"
 	"bphn/artikel-hukum/internal/service"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strconv"
 )
 
-type UserDataRequestHandler struct {
+type UserManagementHandler struct {
 	*Handler
 	userService service.UserService
 }
 
-func NewUserRequestHandler(handler *Handler, userService service.UserService) *UserDataRequestHandler {
-	return &UserDataRequestHandler{handler, userService}
+func NewUserManagementHandler(handler *Handler, userService service.UserService) *UserManagementHandler {
+	return &UserManagementHandler{handler, userService}
 }
 
-func (h *UserDataRequestHandler) List(ctx echo.Context) error {
+func (h *UserManagementHandler) List(ctx echo.Context) error {
 	users, err := h.userService.List(ctx.Request().Context())
 
 	if err != nil {
@@ -30,19 +32,62 @@ func (h *UserDataRequestHandler) List(ctx echo.Context) error {
 	return nil
 }
 
-func (h *UserDataRequestHandler) Create(ctx echo.Context) error {
-	var createUserRequest api.AdminCreateUserRequest
+func (h *UserManagementHandler) Create(ctx echo.Context) error {
+	var createUserRequest api.CreateUserRequest
 
 	if err := ctx.Bind(&createUserRequest); err != nil {
 		h.Logger.Debug(err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
-		return err
+	if err := ctx.Validate(createUserRequest); err != nil {
+		h.Logger.Debug(createUserRequest.Email)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	if err := h.userService.Create(ctx.Request().Context(), &createUserRequest); err != nil {
 		// TODO Error Struct
-		return ctx.JSON(http.StatusInternalServerError, "Oppss")
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusCreated, api.Response{
+		Code:    0,
+		Message: "success",
+		Data:    createUserRequest,
+	})
+}
+
+func (h *UserManagementHandler) Update(ctx echo.Context) error {
+	var updateRequest = new(api.UpdateUserRequest)
+	if err := ctx.Bind(updateRequest); err != nil {
+		h.Logger.Error(err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := ctx.Validate(updateRequest); err != nil {
+		h.Logger.Error(err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := h.userService.Update(ctx.Request().Context(), updateRequest); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	return nil
+
+}
+
+func (h *UserManagementHandler) Delete(ctx echo.Context) error {
+	fmt.Println(ctx.ParamNames())
+	var userId = ctx.Param("id")
+	id, err := strconv.Atoi(userId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	if err := h.userService.Delete(ctx.Request().Context(), uint(id)); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.String(http.StatusNoContent, "")
+
 }
