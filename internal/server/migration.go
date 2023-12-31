@@ -1,7 +1,7 @@
 package server
 
 import (
-	"bphn/artikel-hukum/internal/domain"
+	"bphn/artikel-hukum/internal/model"
 	"bphn/artikel-hukum/pkg/log"
 	"context"
 	"go.uber.org/zap"
@@ -19,7 +19,7 @@ func NewMigration(db *gorm.DB, logger *log.Logger) *Migration {
 }
 
 func (m *Migration) Start() error {
-	if err := m.db.AutoMigrate(&domain.User{}, &domain.AuthorDetail{}); err != nil {
+	if err := m.db.AutoMigrate(&model.User{}, &model.AuthorDetail{}); err != nil {
 		m.logger.Error("migration error", zap.Error(err))
 		panic(err)
 	}

@@ -10,7 +10,7 @@
 package mock_service
 
 import (
-	api "bphn/artikel-hukum/api"
+	api "bphn/artikel-hukum/api/v1"
 	context "context"
 	reflect "reflect"
 

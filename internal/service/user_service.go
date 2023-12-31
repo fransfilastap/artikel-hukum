@@ -1,15 +1,15 @@
 package service
 
 import (
-	"bphn/artikel-hukum/api"
+	"bphn/artikel-hukum/api/v1"
 	"bphn/artikel-hukum/internal/repository"
 	"context"
 )
 
 type UserService interface {
-	List(ctx context.Context) ([]api.UserDataResponse, error)
-	Create(ctx context.Context, request *api.CreateUserRequest) error
-	Update(ctx context.Context, request *api.UpdateUserRequest) error
+	List(ctx context.Context) ([]v1.UserDataResponse, error)
+	Create(ctx context.Context, request *v1.CreateUserRequest) error
+	Update(ctx context.Context, request *v1.UpdateUserRequest) error
 	Delete(ctx context.Context, request uint) error
 }
 

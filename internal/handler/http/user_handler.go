@@ -1,7 +1,7 @@
 package http
 
 import (
-	"bphn/artikel-hukum/api"
+	"bphn/artikel-hukum/api/v1"
 	"bphn/artikel-hukum/internal/service"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -33,7 +33,7 @@ func (h *UserManagementHandler) List(ctx echo.Context) error {
 }
 
 func (h *UserManagementHandler) Create(ctx echo.Context) error {
-	var createUserRequest api.CreateUserRequest
+	var createUserRequest v1.CreateUserRequest
 
 	if err := ctx.Bind(&createUserRequest); err != nil {
 		h.Logger.Debug(err.Error())
@@ -50,7 +50,7 @@ func (h *UserManagementHandler) Create(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(http.StatusCreated, api.Response{
+	return ctx.JSON(http.StatusCreated, v1.CommonResponse{
 		Code:    0,
 		Message: "success",
 		Data:    createUserRequest,
@@ -58,7 +58,7 @@ func (h *UserManagementHandler) Create(ctx echo.Context) error {
 }
 
 func (h *UserManagementHandler) Update(ctx echo.Context) error {
-	var updateRequest = new(api.UpdateUserRequest)
+	var updateRequest = new(v1.UpdateUserRequest)
 	if err := ctx.Bind(updateRequest); err != nil {
 		h.Logger.Error(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

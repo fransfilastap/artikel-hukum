@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"bphn/artikel-hukum/internal/domain"
+	"bphn/artikel-hukum/internal/model"
 	"context"
 )
 
@@ -10,5 +10,5 @@ type userRepository struct {
 }
 
 type UserRepository interface {
-	Create(ctx context.Context, user *domain.User) error
+	Create(ctx context.Context, user *model.User) error
 }

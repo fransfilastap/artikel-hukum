@@ -1,7 +1,7 @@
 package http
 
 import (
-	"bphn/artikel-hukum/api"
+	"bphn/artikel-hukum/api/v1"
 	"bphn/artikel-hukum/internal/middleware"
 	"bphn/artikel-hukum/internal/server"
 	mockservice "bphn/artikel-hukum/internal/service/mocks"
@@ -59,7 +59,7 @@ func TestUserRequestHandler_Create(t *testing.T) {
 
 	t.Run("Success  create user, return http code 200, no error", func(t *testing.T) {
 
-		userRequest := api.CreateUserRequest{
+		userRequest := v1.CreateUserRequest{
 			FullName: "John Snow",
 			Email:    "snow@mail.com",
 			Password: "12345678",
@@ -88,7 +88,7 @@ func TestUserRequestHandler_Create(t *testing.T) {
 	})
 
 	t.Run("Validation error while create user", func(t *testing.T) {
-		userRequest := api.CreateUserRequest{
+		userRequest := v1.CreateUserRequest{
 			FullName: "John Snow",
 			Email:    "mail@johnsnow.techx",
 			Password: "123456",
@@ -126,7 +126,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mockservice.NewMockUserService(ctrl)
-	mockUserService.EXPECT().List(c.Request().Context()).Return([]api.UserDataResponse{
+	mockUserService.EXPECT().List(c.Request().Context()).Return([]v1.UserDataResponse{
 		{
 			Id:       1,
 			FullName: "Frans Filasta Pratama",
@@ -157,7 +157,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 		panic(err)
 	}
 
-	var users []api.UserDataResponse
+	var users []v1.UserDataResponse
 	unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
 
 	if unmarshalErr != nil {
@@ -169,7 +169,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 }
 
 func TestUserManagementHandler_Update(t *testing.T) {
-	userUpdateRequest := api.UpdateUserRequest{
+	userUpdateRequest := v1.UpdateUserRequest{
 		FullName: "John Snow",
 		Email:    "mail@johnsnow.techx",
 		Role:     "editor",
