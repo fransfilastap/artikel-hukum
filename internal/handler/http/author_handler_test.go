@@ -48,7 +48,7 @@ func TestAuthorManagementHandler_RegisterFailed(t *testing.T) {
 
 	registrationRequest := v1.AuthorRegistrationRequest{
 		FullName:   "Frans Filasta Pratamax",
-		Email:      "mail@fransfp.dev",
+		Email:      "mailx@fransfp.dev",
 		Occupation: "PNS",
 		Company:    "BPHN",
 		Password:   "12345678",
@@ -61,11 +61,11 @@ func TestAuthorManagementHandler_RegisterFailed(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 	authorService := mockservice.NewMockAuthorService(ctrl)
-	authorService.EXPECT().Register(gomock.Any(), registrationRequest).Return(echo.ErrConflict).Times(1)
+	authorService.EXPECT().Register(gomock.Any(), registrationRequest).Return(v1.ErrEmailAlreadyExists).AnyTimes()
 
 	handler := NewAuthorManagementHandler(handler, authorService)
 
-	if assert.Error(t, handler.Register(c)) {
+	if assert.NoError(t, handler.Register(c)) {
 		assert.Equal(t, http.StatusConflict, rec.Code)
 	}
 }

@@ -3,7 +3,6 @@ package http
 import (
 	"bphn/artikel-hukum/api/v1"
 	"bphn/artikel-hukum/internal/service"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -41,8 +40,7 @@ func (h *UserManagementHandler) Create(ctx echo.Context) error {
 	}
 
 	if err := ctx.Validate(createUserRequest); err != nil {
-		h.Logger.Debug(createUserRequest.Email)
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ctx.JSON(http.StatusBadRequest, err)
 	}
 
 	if err := h.userService.Create(ctx.Request().Context(), &createUserRequest); err != nil {
@@ -65,29 +63,27 @@ func (h *UserManagementHandler) Update(ctx echo.Context) error {
 	}
 
 	if err := ctx.Validate(updateRequest); err != nil {
-		h.Logger.Error(err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ctx.JSON(http.StatusBadRequest, err)
 	}
 
 	if err := h.userService.Update(ctx.Request().Context(), updateRequest); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return nil
+	return ctx.NoContent(http.StatusOK)
 
 }
 
 func (h *UserManagementHandler) Delete(ctx echo.Context) error {
-	fmt.Println(ctx.ParamNames())
 	var userId = ctx.Param("id")
 	id, err := strconv.Atoi(userId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return ctx.JSON(http.StatusBadRequest, err)
 	}
 	if err := h.userService.Delete(ctx.Request().Context(), uint(id)); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.String(http.StatusNoContent, "")
+	return ctx.NoContent(http.StatusNoContent)
 
 }

@@ -29,9 +29,13 @@ func (h *AuthorManagementHandler) Register(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
+	if err := ctx.Validate(registrationRequest); err != nil {
+		return ctx.JSON(http.StatusBadRequest, err)
+	}
+
 	if err := h.authorService.Register(ctx.Request().Context(), registrationRequest); err != nil {
-		if errors.Is(err, echo.ErrConflict) {
-			return echo.NewHTTPError(http.StatusConflict, echo.ErrConflict)
+		if errors.Is(err, v1.ErrEmailAlreadyExists) {
+			return ctx.JSON(http.StatusConflict, v1.ErrEmailAlreadyExists)
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}

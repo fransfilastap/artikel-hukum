@@ -9,6 +9,7 @@ import (
 	"bphn/artikel-hukum/pkg/log"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -106,11 +107,13 @@ func TestUserRequestHandler_Create(t *testing.T) {
 		defer ctrl.Finish()
 
 		mockService := mockservice.NewMockUserService(ctrl)
-		mockService.EXPECT().Create(c.Request().Context(), gomock.Any()).Return(nil).AnyTimes()
+		mockService.EXPECT().Create(gomock.Any(), userRequest).Return(errors.New("validation error")).AnyTimes()
 
 		userHandler := NewUserManagementHandler(handler, mockService)
 
-		assert.Error(t, userHandler.Create(c))
+		if assert.NoError(t, userHandler.Create(c)) {
+			assert.Equal(t, http.StatusBadRequest, rec.Code)
+		}
 
 	})
 
@@ -190,8 +193,9 @@ func TestUserManagementHandler_Update(t *testing.T) {
 	userHandler := NewUserManagementHandler(handler, mockUserService)
 	err := userHandler.Update(c)
 
-	assert.NoError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
+	if assert.NoError(t, err) {
+		assert.Equal(t, res.Code, http.StatusOK)
+	}
 
 }
 
