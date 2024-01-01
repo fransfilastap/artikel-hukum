@@ -26,7 +26,7 @@ func (h *AuthorManagementHandler) Register(ctx echo.Context) error {
 	var registrationRequest v1.AuthorRegistrationRequest
 
 	if err := ctx.Bind(&registrationRequest); err != nil {
-		h.Logger.Info(err.Error())
+		h.Logger().Info(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
@@ -38,6 +38,7 @@ func (h *AuthorManagementHandler) Register(ctx echo.Context) error {
 		if errors.Is(err, v1.ErrEmailAlreadyExists) {
 			return ctx.JSON(http.StatusConflict, v1.ErrEmailAlreadyExists)
 		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
@@ -58,5 +59,18 @@ func (h *AuthorManagementHandler) GetProfile(ctx echo.Context) error {
 }
 
 func (h *AuthorManagementHandler) UpdateProfile(ctx echo.Context) error {
-	panic("implement me")
+	var updateRequest v1.UpdateAuthorProfileRequest
+	if err := ctx.Bind(&updateRequest); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := ctx.Validate(updateRequest); err != nil {
+		return ctx.JSON(http.StatusNotAcceptable, err)
+	}
+
+	if err := h.authorService.UpdateProfile(ctx.Request().Context(), updateRequest); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }

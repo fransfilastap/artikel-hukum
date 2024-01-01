@@ -178,3 +178,7 @@ func TestUserManagementHandler_Delete(t *testing.T) {
 		assert.Equal(t, "", res.Body.String())
 	}
 }
+
+func TestUserManagementHandler_ForgotPassword(t *testing.T) {
+
+}

@@ -11,7 +11,7 @@ import (
 func JWTMiddleware(secret string) echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		Skipper: func(c echo.Context) bool {
-			return c.Request().URL.Path == "auth/login"
+			return c.Request().URL.Path == "/login"
 		},
 		ContextKey: constants.JwtCtxKey,
 		SigningKey: []byte(secret),

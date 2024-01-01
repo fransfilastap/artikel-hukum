@@ -103,8 +103,40 @@ func TestAuthorManagementHandler_GetProfile(t *testing.T) {
 	assert.Equal(t, string(resJSON), strings.Replace(rec.Body.String(), "\n", "", 1))
 }
 
+func TestAuthorManagementHandler_UpdateProfile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	updateRequest := v1.UpdateAuthorProfileRequest{
+		Id:         12,
+		FullName:   "John Doe",
+		Email:      "mail@johndoe.com",
+		Occupation: "Lawyer",
+		Company:    "Microsoft",
+	}
+
+	updatePayload, _ := json.Marshal(updateRequest)
+
+	authorService := mockservice.NewMockAuthorService(ctrl)
+	authorService.EXPECT().UpdateProfile(gomock.Any(), updateRequest).Return(nil).AnyTimes()
+
+	handler := NewAuthorManagementHandler(handler, authorService)
+
+	e.PUT("/api/author", handler.UpdateProfile)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/author", bytes.NewReader(updatePayload))
+	req.Header.Set("Authorization", "Bearer "+generateToken(t))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+}
+
 func generateToken(t *testing.T) string {
-	token, err := jwt.GenerateToken(12, "author", time.Now().Add(time.Hour))
+	token, err := jwt.GenerateToken(12, "author", time.Now().Add(time.Hour*24))
 	if err != nil {
 		t.Error(err)
 		return token

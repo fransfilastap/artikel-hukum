@@ -35,7 +35,7 @@ func (h *UserManagementHandler) Create(ctx echo.Context) error {
 	var createUserRequest v1.CreateUserRequest
 
 	if err := ctx.Bind(&createUserRequest); err != nil {
-		h.Logger.Debug(err.Error())
+		h.Logger().Debug(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -58,7 +58,7 @@ func (h *UserManagementHandler) Create(ctx echo.Context) error {
 func (h *UserManagementHandler) Update(ctx echo.Context) error {
 	var updateRequest = new(v1.UpdateUserRequest)
 	if err := ctx.Bind(updateRequest); err != nil {
-		h.Logger.Error(err.Error())
+		h.Logger().Error(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

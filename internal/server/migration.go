@@ -19,7 +19,7 @@ func NewMigration(db *gorm.DB, logger *log.Logger) *Migration {
 }
 
 func (m *Migration) Start() error {
-	if err := m.db.AutoMigrate(&model.User{}, &model.AuthorDetail{}); err != nil {
+	if err := m.db.AutoMigrate(&model.User{}, &model.AuthorDetail{}, &model.PasswordResetToken{}); err != nil {
 		m.logger.Error("migration error", zap.Error(err))
 		panic(err)
 	}

@@ -7,5 +7,13 @@ import (
 
 type Handler struct {
 	viper  *viper.Viper
-	Logger *log.Logger
+	logger *log.Logger
+}
+
+func NewHandler(config *viper.Viper, logger *log.Logger) *Handler {
+	return &Handler{config, logger}
+}
+
+func (h *Handler) Logger() *log.Logger {
+	return h.logger
 }

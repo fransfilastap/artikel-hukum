@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 	conf := config.NewConfig(*envConf)
 
 	logger = log.NewLog(conf)
-	handler = &Handler{conf, logger}
+	handler = NewHandler(conf, logger)
 
 	e = echo.New()
 	server.SetupValidator(e)

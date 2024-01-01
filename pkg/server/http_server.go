@@ -40,8 +40,8 @@ func WithServerPort(port int) Option {
 	}
 }
 
-func (h *HttpServer) SetupRoutes() {
-
+func (h *HttpServer) Engine() *echo.Echo {
+	return h.echo
 }
 
 func (h *HttpServer) Start() error {

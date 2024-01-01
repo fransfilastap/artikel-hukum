@@ -18,19 +18,29 @@ type userService struct {
 	repository repository.UserRepository
 }
 
-/*func NewUserService(service *Service, userRepository repository.UserRepository) UserService {
+func NewUserService(service *Service, userRepository repository.UserRepository) UserService {
 	return &userService{
-		Service:    service,
-		repository: userRepository,
+		service,
+		userRepository,
 	}
 }
 
-func (u *userService) List(ctx context.Context) ([]api.UserDataResponse, error) {
+func (u userService) List(ctx context.Context) ([]v1.UserDataResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u *userService) Create(ctx context.Context) error {
+func (u userService) Create(ctx context.Context, request *v1.CreateUserRequest) error {
 	//TODO implement me
 	panic("implement me")
-}*/
+}
+
+func (u userService) Update(ctx context.Context, request *v1.UpdateUserRequest) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u userService) Delete(ctx context.Context, request uint) error {
+	//TODO implement me
+	panic("implement me")
+}
