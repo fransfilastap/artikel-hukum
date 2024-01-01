@@ -3,6 +3,7 @@ package http
 import (
 	v1 "bphn/artikel-hukum/api/v1"
 	"bphn/artikel-hukum/internal/service"
+	"bphn/artikel-hukum/internal/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -46,13 +47,16 @@ func (h *AuthorManagementHandler) Register(ctx echo.Context) error {
 	})
 }
 
-func (h *AuthorManagementHandler) ForgotPassword(ctx echo.Context) error {
-	// 1. Check user/author with submitted email exist in database
-	// 2. if exists send reset password link
-	// 3. if doesn't exist return err
-	return nil
+func (h *AuthorManagementHandler) GetProfile(ctx echo.Context) error {
+	userId := utils.GetUserIdFromCtx(ctx)
+	profileResponse, err := h.authorService.Profile(ctx.Request().Context(), userId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return ctx.JSON(http.StatusOK, profileResponse)
 }
 
-func (h *AuthorManagementHandler) GetProfile(ctx echo.Context) error {
+func (h *AuthorManagementHandler) UpdateProfile(ctx echo.Context) error {
 	panic("implement me")
 }

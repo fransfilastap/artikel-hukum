@@ -87,3 +87,10 @@ func (h *UserManagementHandler) Delete(ctx echo.Context) error {
 	return ctx.NoContent(http.StatusNoContent)
 
 }
+
+func (h *UserManagementHandler) ForgotPassword(ctx echo.Context) error {
+	// 1. Check user/author with submitted email exist in database
+	// 2. if exists send reset password link
+	// 3. if doesn't exist return err
+	return nil
+}
