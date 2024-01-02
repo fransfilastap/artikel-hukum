@@ -89,7 +89,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 		defer ctrl.Finish()
 
 		mockUserService := mockservice.NewMockUserService(ctrl)
-		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(dto.ListQueryResult[v1.UserDataResponse]{
+		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&dto.ListQueryResult[v1.UserDataResponse]{
 			TotalPage: 1,
 			Page:      1,
 			Items: []v1.UserDataResponse{
@@ -144,7 +144,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 		defer ctrl.Finish()
 
 		mockUserService := mockservice.NewMockUserService(ctrl)
-		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(dto.ListQueryResult[v1.UserDataResponse]{
+		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&dto.ListQueryResult[v1.UserDataResponse]{
 			TotalPage: 1,
 			Page:      1,
 			Items: []v1.UserDataResponse{
