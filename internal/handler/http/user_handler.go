@@ -84,7 +84,7 @@ func (h *UserManagementHandler) Update(ctx echo.Context) error {
 
 	if err := h.userService.Update(ctx.Request().Context(), &updateRequest); err != nil {
 		if errors.Is(err, v1.ErrUserDoesNotExists) {
-			return echo.NewHTTPError(http.StatusNotFound, err)
+			return echo.NewHTTPError(http.StatusNotFound)
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}

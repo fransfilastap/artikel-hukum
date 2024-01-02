@@ -47,7 +47,7 @@ func TestUserRequestHandler_Create(t *testing.T) {
 
 	})
 
-	t.Run("Validation error while create user", func(t *testing.T) {
+	t.Run("Validation error while creating user", func(t *testing.T) {
 		userRequest := v1.CreateUserRequest{
 			FullName: "John Snow",
 			Email:    "mail@johnsnow.techx",
@@ -177,67 +177,6 @@ func TestUserRequestHandler_List(t *testing.T) {
 	})
 }
 
-func TestUserManagementHandler_Update(t *testing.T) {
-
-	t.Run("Success update user", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-
-		userUpdateRequest := v1.UpdateUserRequest{
-			FullName: "John Snow",
-			Email:    "mail@johnsnow.techx",
-			Role:     "editor",
-		}
-
-		userJSON, _ := json.Marshal(userUpdateRequest)
-
-		req := httptest.NewRequest(http.MethodPut, "/api/users/1", bytes.NewReader(userJSON))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		req.Header.Set("Authorization", "Bearer "+generateToken(t))
-		rec := httptest.NewRecorder()
-
-		mockUserService := mockservice.NewMockUserService(ctrl)
-		mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-
-		userHandler := NewUserManagementHandler(handler, mockUserService)
-
-		e.PUT("/api/users/:id", userHandler.Update)
-
-		e.ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusOK, rec.Code)
-	})
-
-	t.Run("Failed update user, user not found", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-
-		userUpdateRequest := v1.UpdateUserRequest{
-			FullName: "John Snow",
-			Email:    "mail@johnsnow.techx",
-			Role:     "editor",
-		}
-
-		userJSON, _ := json.Marshal(userUpdateRequest)
-
-		req := httptest.NewRequest(http.MethodPut, "/api/users/1", bytes.NewReader(userJSON))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		req.Header.Set("Authorization", "Bearer "+generateToken(t))
-		rec := httptest.NewRecorder()
-
-		mockUserService := mockservice.NewMockUserService(ctrl)
-		mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(v1.ErrUserDoesNotExists).AnyTimes()
-
-		userHandler := NewUserManagementHandler(handler, mockUserService)
-
-		e.PUT("/api/users/:id", userHandler.Update)
-
-		e.ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusNotFound, rec.Code)
-
-	})
-
-}
-
 func TestUserManagementHandler_Delete(t *testing.T) {
 	req := httptest.NewRequest(http.MethodDelete, "/api/users/12", nil)
 	res := httptest.NewRecorder()
@@ -260,6 +199,63 @@ func TestUserManagementHandler_Delete(t *testing.T) {
 	}
 }
 
-func TestUserManagementHandler_ForgotPassword(t *testing.T) {
+func TestUserManagementHandler_UpdateSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	userUpdateRequest := v1.UpdateUserRequest{
+		Id:       1,
+		FullName: "John Snow",
+		Email:    "mail@johnsnow.techx",
+		Role:     "editor",
+	}
+
+	userJSON, _ := json.Marshal(userUpdateRequest)
+
+	mockUserService := mockservice.NewMockUserService(ctrl)
+	mockUserService.EXPECT().Update(gomock.Any(), &userUpdateRequest).Return(nil).Times(1)
+
+	userHandler := NewUserManagementHandler(handler, mockUserService)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/users/1", bytes.NewReader(userJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	if assert.NoError(t, userHandler.Update(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+	}
+
+}
+
+func TestUserManagementHandler_UpdateFailedDueToUserNotFound(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+
+	userUpdateRequest := v1.UpdateUserRequest{
+		FullName: "John Snow",
+		Email:    "mail@johnsnow.techx",
+		Role:     "editor",
+	}
+
+	userJSON, _ := json.Marshal(userUpdateRequest)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/users/1", bytes.NewReader(userJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	mockUserService := mockservice.NewMockUserService(ctrl)
+	mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(v1.ErrUserDoesNotExists).AnyTimes()
+
+	userHandler := NewUserManagementHandler(handler, mockUserService)
+
+	err := userHandler.Update(c)
+	if assert.Error(t, err) {
+		assert.Equal(t, echo.ErrNotFound, err)
+	}
 
 }
