@@ -4,7 +4,7 @@ import (
 	"bphn/artikel-hukum/internal/middleware"
 	"bphn/artikel-hukum/internal/server"
 	"bphn/artikel-hukum/pkg/config"
-	jwt2 "bphn/artikel-hukum/pkg/jwt"
+	pkgjwt "bphn/artikel-hukum/pkg/jwt"
 	"bphn/artikel-hukum/pkg/log"
 	"flag"
 	"fmt"
@@ -17,7 +17,7 @@ var (
 	logger  *log.Logger
 	handler *Handler
 	e       *echo.Echo
-	jwt     *jwt2.JWT
+	jwt     *pkgjwt.JWT
 )
 
 func TestMain(m *testing.M) {
@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 	e = echo.New()
 	server.SetupValidator(e)
 
-	jwt = jwt2.NewJwt(conf)
+	jwt = pkgjwt.NewJwt(conf)
 
 	// register middlewares
 	middleware.SetupMiddleware(conf, logger, e)

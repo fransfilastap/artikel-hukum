@@ -8,11 +8,6 @@ type UserDataResponse struct {
 	Role     string `json:"role"`
 }
 
-// TODO add pagination traits
-type UserListResponse struct {
-	data *[]UserDataResponse
-}
-
 type CreateUserRequest struct {
 	FullName string `json:"full_name" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
@@ -21,6 +16,7 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
+	Id       uint   `param:"id" validate:"required"`
 	FullName string `json:"full_name" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"omitempty,min=8"`

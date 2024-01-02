@@ -2,6 +2,7 @@ package http
 
 import (
 	v1 "bphn/artikel-hukum/api/v1"
+	"bphn/artikel-hukum/internal/dto"
 	"bphn/artikel-hukum/internal/service"
 	"bphn/artikel-hukum/internal/utils"
 	"errors"
@@ -73,4 +74,19 @@ func (h *AuthorManagementHandler) UpdateProfile(ctx echo.Context) error {
 	}
 
 	return ctx.NoContent(http.StatusOK)
+}
+
+func (h *AuthorManagementHandler) List(ctx echo.Context) error {
+	var listQuery dto.ListQuery
+
+	if err := ctx.Bind(&listQuery); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	authors, err := h.authorService.List(ctx.Request().Context(), listQuery)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return ctx.JSON(http.StatusOK, authors)
 }

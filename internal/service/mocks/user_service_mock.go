@@ -10,7 +10,9 @@
 package mock_service
 
 import (
-	api "bphn/artikel-hukum/api/v1"
+	v1 "bphn/artikel-hukum/api/v1"
+	dto "bphn/artikel-hukum/internal/dto"
+	model "bphn/artikel-hukum/internal/model"
 	context "context"
 	reflect "reflect"
 
@@ -41,7 +43,7 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockUserService) Create(ctx context.Context, request *api.CreateUserRequest) error {
+func (m *MockUserService) Create(ctx context.Context, request *v1.CreateUserRequest) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, request)
 	ret0, _ := ret[0].(error)
@@ -68,23 +70,53 @@ func (mr *MockUserServiceMockRecorder) Delete(ctx, request any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUserService)(nil).Delete), ctx, request)
 }
 
-// List mocks base method.
-func (m *MockUserService) List(ctx context.Context) ([]api.UserDataResponse, error) {
+// FindByEmail mocks base method.
+func (m *MockUserService) FindByEmail(ctx context.Context, email string) (*model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", ctx)
-	ret0, _ := ret[0].([]api.UserDataResponse)
+	ret := m.ctrl.Call(m, "FindByEmail", ctx, email)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByEmail indicates an expected call of FindByEmail.
+func (mr *MockUserServiceMockRecorder) FindByEmail(ctx, email any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEmail", reflect.TypeOf((*MockUserService)(nil).FindByEmail), ctx, email)
+}
+
+// FindById mocks base method.
+func (m *MockUserService) FindById(ctx context.Context, id uint) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindById", ctx, id)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindById indicates an expected call of FindById.
+func (mr *MockUserServiceMockRecorder) FindById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockUserService)(nil).FindById), ctx, id)
+}
+
+// List mocks base method.
+func (m *MockUserService) List(ctx context.Context, query dto.ListQuery) (*dto.ListQueryResult[v1.UserDataResponse], error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, query)
+	ret0, _ := ret[0].(*dto.ListQueryResult[v1.UserDataResponse])
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockUserServiceMockRecorder) List(ctx any) *gomock.Call {
+func (mr *MockUserServiceMockRecorder) List(ctx, query any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockUserService)(nil).List), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockUserService)(nil).List), ctx, query)
 }
 
 // Update mocks base method.
-func (m *MockUserService) Update(ctx context.Context, request *api.UpdateUserRequest) error {
+func (m *MockUserService) Update(ctx context.Context, request *v1.UpdateUserRequest) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, request)
 	ret0, _ := ret[0].(error)

@@ -2,6 +2,7 @@ package http
 
 import (
 	"bphn/artikel-hukum/api/v1"
+	"bphn/artikel-hukum/internal/dto"
 	mockservice "bphn/artikel-hukum/internal/service/mocks"
 	"bytes"
 	"encoding/json"
@@ -79,81 +80,161 @@ func TestUserRequestHandler_Create(t *testing.T) {
 
 func TestUserRequestHandler_List(t *testing.T) {
 
-	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+	t.Run("basic list query", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
 
-	mockUserService := mockservice.NewMockUserService(ctrl)
-	mockUserService.EXPECT().List(c.Request().Context()).Return([]v1.UserDataResponse{
-		{
-			Id:       1,
-			FullName: "Frans Filasta Pratama",
-			Email:    "mail@fransfp.dev",
-			Avatar:   "https://ui-avatars.com/api/?uppercase=false&name=frans",
-			Role:     "admin",
-		},
-		{
-			Id:       2,
-			FullName: "Rahma Fitri",
-			Email:    "rahmafitri92@gmail.com",
-			Avatar:   "https://ui-avatars.com/api/?uppercase=false&name=rahma+fitri",
-			Role:     "author",
-		},
-		{
-			Id:       3,
-			FullName: "Ibrahim Finra Achernar",
-			Email:    "finn@fransfp.dev",
-			Avatar:   "https://ui-avatars.com/api/?uppercase=false&name=finn",
-			Role:     "author",
-		},
-	}, nil).AnyTimes()
+		mockUserService := mockservice.NewMockUserService(ctrl)
+		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(dto.ListQueryResult[v1.UserDataResponse]{
+			TotalPage: 1,
+			Page:      1,
+			Items: []v1.UserDataResponse{
+				{
+					Id:       1,
+					FullName: "Frans Filasta Pratama",
+					Email:    "mail@fransfp.dev",
+					Avatar:   "https://ui-avatars.com/api/?uppercase=false&name=frans",
+					Role:     "admin",
+				},
+				{
+					Id:       2,
+					FullName: "Rahma Fitri",
+					Email:    "rahmafitri92@gmail.com",
+					Avatar:   "https://ui-avatars.com/api/?uppercase=false&name=rahma+fitri",
+					Role:     "author",
+				},
+				{
+					Id:       3,
+					FullName: "Ibrahim Finra Achernar",
+					Email:    "finn@fransfp.dev",
+					Avatar:   "https://ui-avatars.com/api/?uppercase=false&name=finn",
+					Role:     "author",
+				},
+			},
+		}, nil).AnyTimes()
 
-	userHandler := NewUserManagementHandler(handler, mockUserService)
+		userHandler := NewUserManagementHandler(handler, mockUserService)
 
-	err := userHandler.List(c)
-	if err != nil {
-		panic(err)
-	}
+		err := userHandler.List(c)
+		if err != nil {
+			panic(err)
+		}
 
-	var users []v1.UserDataResponse
-	unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
+		var users dto.ListQueryResult[v1.UserDataResponse]
+		unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
 
-	if unmarshalErr != nil {
-		panic(unmarshalErr)
-	}
+		if unmarshalErr != nil {
+			panic(unmarshalErr)
+		}
 
-	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, len(users), 3)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, 3, len(users.Items))
+	})
+
+	t.Run("List with filter and options", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/users?page=1&size=1&sort=email", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockUserService := mockservice.NewMockUserService(ctrl)
+		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(dto.ListQueryResult[v1.UserDataResponse]{
+			TotalPage: 1,
+			Page:      1,
+			Items: []v1.UserDataResponse{
+				{
+					Id:       1,
+					FullName: "Frans Filasta Pratama",
+					Email:    "mail@fransfp.dev",
+					Avatar:   "https://ui-avatars.com/api/?uppercase=false&name=frans",
+					Role:     "admin",
+				},
+			},
+		}, nil).AnyTimes()
+
+		userHandler := NewUserManagementHandler(handler, mockUserService)
+
+		err := userHandler.List(c)
+		if err != nil {
+			panic(err)
+		}
+
+		var users dto.ListQueryResult[v1.UserDataResponse]
+		unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
+
+		if unmarshalErr != nil {
+			panic(unmarshalErr)
+		}
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, 1, len(users.Items))
+	})
 }
 
 func TestUserManagementHandler_Update(t *testing.T) {
-	userUpdateRequest := v1.UpdateUserRequest{
-		FullName: "John Snow",
-		Email:    "mail@johnsnow.techx",
-		Role:     "editor",
-	}
 
-	userJSON, _ := json.Marshal(userUpdateRequest)
+	t.Run("Success update user", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/users/1", bytes.NewReader(userJSON))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	res := httptest.NewRecorder()
-	c := e.NewContext(req, res)
+		userUpdateRequest := v1.UpdateUserRequest{
+			FullName: "John Snow",
+			Email:    "mail@johnsnow.techx",
+			Role:     "editor",
+		}
 
-	ctrl := gomock.NewController(t)
+		userJSON, _ := json.Marshal(userUpdateRequest)
 
-	mockUserService := mockservice.NewMockUserService(ctrl)
-	mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		req := httptest.NewRequest(http.MethodPut, "/api/users/1", bytes.NewReader(userJSON))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set("Authorization", "Bearer "+generateToken(t))
+		rec := httptest.NewRecorder()
 
-	userHandler := NewUserManagementHandler(handler, mockUserService)
-	err := userHandler.Update(c)
+		mockUserService := mockservice.NewMockUserService(ctrl)
+		mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	if assert.NoError(t, err) {
-		assert.Equal(t, res.Code, http.StatusOK)
-	}
+		userHandler := NewUserManagementHandler(handler, mockUserService)
+
+		e.PUT("/api/users/:id", userHandler.Update)
+
+		e.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+	})
+
+	t.Run("Failed update user, user not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		userUpdateRequest := v1.UpdateUserRequest{
+			FullName: "John Snow",
+			Email:    "mail@johnsnow.techx",
+			Role:     "editor",
+		}
+
+		userJSON, _ := json.Marshal(userUpdateRequest)
+
+		req := httptest.NewRequest(http.MethodPut, "/api/users/1", bytes.NewReader(userJSON))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set("Authorization", "Bearer "+generateToken(t))
+		rec := httptest.NewRecorder()
+
+		mockUserService := mockservice.NewMockUserService(ctrl)
+		mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(v1.ErrUserDoesNotExists).AnyTimes()
+
+		userHandler := NewUserManagementHandler(handler, mockUserService)
+
+		e.PUT("/api/users/:id", userHandler.Update)
+
+		e.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+
+	})
 
 }
 

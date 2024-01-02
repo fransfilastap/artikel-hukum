@@ -14,6 +14,8 @@ import (
 
 var serverSet = wire.NewSet(server.NewHttpServer)
 
+//var handlerSet = wire.NewSet(pkghandler.NewUserManagementHandler, pkghandler.NewAuthorManagementHandler)
+
 func newServer(httpServer *pkgserver.HttpServer) *app.App {
 	return app.NewApp(app.WithServer(httpServer), app.WithName("artikel-hukum-api"))
 }

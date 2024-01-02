@@ -2,7 +2,9 @@ package http
 
 import (
 	"bphn/artikel-hukum/api/v1"
+	"bphn/artikel-hukum/internal/dto"
 	"bphn/artikel-hukum/internal/service"
+	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -18,7 +20,12 @@ func NewUserManagementHandler(handler *Handler, userService service.UserService)
 }
 
 func (h *UserManagementHandler) List(ctx echo.Context) error {
-	users, err := h.userService.List(ctx.Request().Context())
+
+	var request dto.ListQuery
+	if err := ctx.Bind(&request); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	users, err := h.userService.List(ctx.Request().Context(), request)
 
 	if err != nil {
 		return err
@@ -56,17 +63,29 @@ func (h *UserManagementHandler) Create(ctx echo.Context) error {
 }
 
 func (h *UserManagementHandler) Update(ctx echo.Context) error {
-	var updateRequest = new(v1.UpdateUserRequest)
-	if err := ctx.Bind(updateRequest); err != nil {
+
+	userId := ctx.Param("id")
+	ID, err := strconv.Atoi(userId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	var updateRequest v1.UpdateUserRequest
+	if err := ctx.Bind(&updateRequest); err != nil {
 		h.Logger().Error(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	updateRequest.Id = uint(ID)
 
 	if err := ctx.Validate(updateRequest); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 
-	if err := h.userService.Update(ctx.Request().Context(), updateRequest); err != nil {
+	if err := h.userService.Update(ctx.Request().Context(), &updateRequest); err != nil {
+		if errors.Is(err, v1.ErrUserDoesNotExists) {
+			return echo.NewHTTPError(http.StatusNotFound, err)
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 

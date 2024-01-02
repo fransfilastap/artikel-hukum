@@ -2,6 +2,7 @@ package http
 
 import (
 	v1 "bphn/artikel-hukum/api/v1"
+	"bphn/artikel-hukum/internal/dto"
 	mockservice "bphn/artikel-hukum/internal/service/mocks"
 	"bytes"
 	"encoding/json"
@@ -143,4 +144,41 @@ func generateToken(t *testing.T) string {
 	}
 
 	return token
+}
+
+func TestAuthorManagementHandler_List(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/authors?page=1&size=2", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+generateToken(t))
+	rec := httptest.NewRecorder()
+
+	authorService := mockservice.NewMockAuthorService(ctrl)
+	authorService.EXPECT().List(gomock.Any(), gomock.Any()).Return(dto.ListQueryResult[v1.AuthorProfileDataResponse]{
+		TotalPage: 2,
+		Page:      1,
+		Items: []v1.AuthorProfileDataResponse{{
+			Id:         12,
+			FullName:   "John Doe",
+			Email:      "mail@johndoe.com",
+			Occupation: "Lawyer",
+			Company:    "Microsoft",
+		}},
+	}, nil)
+
+	handler := NewAuthorManagementHandler(handler, authorService)
+
+	e.GET("/api/authors", handler.List)
+	e.ServeHTTP(rec, req)
+
+	var users dto.ListQueryResult[v1.UserDataResponse]
+	unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
+
+	if unmarshalErr != nil {
+		t.Fail()
+	}
+	assert.Equal(t, http.StatusOK, rec.Code)
+
 }
