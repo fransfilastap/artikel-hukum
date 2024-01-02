@@ -146,8 +146,7 @@ func TestUserService_Create(t *testing.T) {
 	})
 }
 
-/*func TestUserService_Update(t *testing.T) {
-
+func TestUserService_Update(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
@@ -160,7 +159,9 @@ func TestUserService_Create(t *testing.T) {
 		}
 
 		repo := mock_repository.NewMockUserRepository(ctrl)
-		repo.EXPECT().Update(gomock.Any(), &user).Return(nil).AnyTimes()
+
+		repo.EXPECT().FindById(gomock.Any(), user.Id).Return(&model.User{}, nil).Times(1)
+		repo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 		userService := NewUserService(&service, repo)
 
@@ -182,7 +183,8 @@ func TestUserService_Create(t *testing.T) {
 			Role:     "author",
 		}
 
-		repo.EXPECT().Update(gomock.Any(), &user).Return(v1.ErrUserDoesNotExists).AnyTimes()
+		repo.EXPECT().FindById(gomock.Any(), user.Id).Return(nil, nil).Times(1)
+		repo.EXPECT().Update(gomock.Any(), &model.User{}).Return(v1.ErrUserDoesNotExists).Times(0)
 
 		err := userService.Update(context.Background(), &user)
 
@@ -194,4 +196,48 @@ func TestUserService_Create(t *testing.T) {
 		t.Fail()
 
 	})
-}*/
+}
+
+func TestUserService_Delete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	repo := mock_repository.NewMockUserRepository(ctrl)
+	repo.EXPECT().Delete(gomock.Any(), uint(12)).Return(nil).Times(1)
+
+	userService := NewUserService(&service, repo)
+
+	assert.NoError(t, userService.Delete(context.Background(), uint(12)))
+}
+
+func TestUserService_FindByEmail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	repo := mock_repository.NewMockUserRepository(ctrl)
+	repo.EXPECT().FindByEmail(gomock.Any(), "mail@johndoe.com").Return(&model.User{
+		Id:       uint(12),
+		FullName: "John Doe",
+	}, nil).Times(1)
+
+	userService := NewUserService(&service, repo)
+
+	user, err := userService.FindByEmail(context.Background(), "mail@johndoe.com")
+	if assert.NoError(t, err) {
+		assert.Equal(t, uint(12), user.Id)
+		assert.Equal(t, "John Doe", user.FullName)
+	}
+}
+
+func TestUserService_FindById(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	repo := mock_repository.NewMockUserRepository(ctrl)
+	repo.EXPECT().FindById(gomock.Any(), uint(12)).Return(&model.User{
+		Id:       uint(12),
+		FullName: "John Doe",
+	}, nil).Times(1)
+
+	userService := NewUserService(&service, repo)
+
+	user, err := userService.FindById(context.Background(), 12)
+	if assert.NoError(t, err) {
+		assert.Equal(t, uint(12), user.Id)
+		assert.Equal(t, "John Doe", user.FullName)
+	}
+}

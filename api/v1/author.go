@@ -20,6 +20,7 @@ type AuthorRegistrationRequest struct {
 type UpdateAuthorProfileRequest struct {
 	Id         uint   `json:"id,omitempty"`
 	FullName   string `json:"full_name" validate:"required"`
+	Avatar     string `json:"avatar"`
 	Email      string `json:"email" validate:"required,email"`
 	Occupation string `json:"occupation" validate:"required"`
 	Company    string `json:"company" validate:"required"`

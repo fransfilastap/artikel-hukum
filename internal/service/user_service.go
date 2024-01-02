@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type UserService interface {
@@ -81,23 +82,34 @@ func (u *userService) Create(ctx context.Context, request *v1.CreateUserRequest)
 }
 
 func (u *userService) Update(ctx context.Context, request *v1.UpdateUserRequest) error {
-	//TODO implement me
-	panic("implement me")
+
+	if user, err := u.repository.FindById(ctx, request.Id); err == nil && user == nil {
+		return v1.ErrUserDoesNotExists
+	} else {
+		user.FullName = request.FullName
+		user.Email = request.Email
+		user.UpdatedAt = time.Now()
+		user.Role = model.Role(request.Role)
+		user.Avatar = request.Avatar
+
+		if err := u.repository.Update(ctx, user); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (u *userService) Delete(ctx context.Context, request uint) error {
-	//TODO implement me
-	panic("implement me")
+	return u.repository.Delete(ctx, request)
 }
 
 func (u *userService) FindById(ctx context.Context, id uint) (*model.User, error) {
-	//TODO implement me
-	panic("implement me")
+	return u.repository.FindById(ctx, id)
 }
 
 func (u *userService) FindByEmail(ctx context.Context, email string) (*model.User, error) {
-	//TODO implement me
-	panic("implement me")
+	return u.repository.FindByEmail(ctx, email)
 }
 
 func mapToUserDataResponse(user model.User) v1.UserDataResponse {
