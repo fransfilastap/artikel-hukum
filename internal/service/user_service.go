@@ -6,6 +6,7 @@ import (
 	"bphn/artikel-hukum/internal/ito"
 	"bphn/artikel-hukum/internal/model"
 	"bphn/artikel-hukum/internal/repository"
+	"bphn/artikel-hukum/internal/utils"
 	"context"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
@@ -13,7 +14,7 @@ import (
 )
 
 type UserService interface {
-	List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[v1.UserDataResponse], error)
+	List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[ito.UserDataResponse], error)
 	FindById(ctx context.Context, id uint) (*model.User, error)
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
 	Create(ctx context.Context, request *v1.CreateUserRequest) error
@@ -35,19 +36,19 @@ func NewUserService(service *Service, userRepository repository.UserRepository) 
 	}
 }
 
-func (u *userService) List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[v1.UserDataResponse], error) {
+func (u *userService) List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[ito.UserDataResponse], error) {
 	users, err := u.repository.FindAll(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
-	userDataResponses := make([]v1.UserDataResponse, 0)
+	userDataResponses := make([]ito.UserDataResponse, 0)
 
 	for _, user := range users.Items {
 		userDataResponses = append(userDataResponses, toUserDataResponse(user))
 	}
 
-	return &ito.ListQueryResult[v1.UserDataResponse]{
+	return &ito.ListQueryResult[ito.UserDataResponse]{
 		TotalPage: users.TotalPage,
 		Page:      users.Page,
 		Items:     userDataResponses,
@@ -149,12 +150,30 @@ func (u *userService) ChangePasswordByNonAdmin(ctx context.Context, request ito.
 }
 
 func (u *userService) ForgotPassword(ctx context.Context, request v1.ForgotPasswordRequest) error {
-	//TODO implement me
-	panic("implement me")
+
+	// 1. Check user/author with submitted email exist in database
+	user, err := u.repository.FindByEmail(ctx, request.Email)
+
+	if err != nil {
+		return err
+	}
+
+	// 2. If user doesnt exists,
+	if user == nil {
+		return errors.ErrUserDoesNotExists
+	}
+
+	// 3. if exists send reset password link
+	if err := sendForgotPasswordMail(user.Email); err != nil {
+		// failed job saved and should be retryable
+		u.logger.Error(fmt.Sprintf("Failed to send reset password to %s ", user.Email))
+	}
+
+	return nil
 }
 
-func toUserDataResponse(user model.User) v1.UserDataResponse {
-	return v1.UserDataResponse{
+func toUserDataResponse(user model.User) ito.UserDataResponse {
+	return ito.UserDataResponse{
 		Id:       user.Id,
 		FullName: user.FullName,
 		Email:    user.Email,
@@ -179,4 +198,14 @@ func toModel(request *v1.CreateUserRequest) *model.User {
 		Email:    request.Email,
 		Role:     model.Role(request.Role),
 	}
+}
+
+func sendForgotPasswordMail(emailAddress string) error {
+	email := utils.Email{
+		To:      emailAddress,
+		Subject: "Reset Your Password",
+		Body:    "Next",
+	}
+
+	return utils.SendEmail(email)
 }

@@ -62,6 +62,102 @@ func TestMain(m *testing.M) {
 
 }
 
+func TestUserManagementHandler_ForgotPassword(t *testing.T) {
+
+	t.Run("Success update password", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		forgotPasswordRequest := v1.ForgotPasswordRequest{Email: "mail@johndoe.com"}
+		forgotPasswordRequestJson, _ := json.Marshal(forgotPasswordRequest)
+
+		userServiceMock := mockservice.NewMockUserService(ctrl)
+		userServiceMock.EXPECT().ForgotPassword(gomock.Any(), forgotPasswordRequest).Return(nil).Times(1)
+
+		req := httptest.NewRequest(http.MethodPut, "/api/users/forgot-password", bytes.NewReader(forgotPasswordRequestJson))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderAuthorization, "Bearer "+generateToken(t))
+		rec := httptest.NewRecorder()
+
+		handler := NewUserManagementHandler(handler, userServiceMock)
+
+		e.PUT("/api/users/forgot-password", handler.ForgotPassword)
+		e.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+	})
+
+	t.Run("Failed to update password due to validation error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		forgotPasswordRequest := v1.ForgotPasswordRequest{Email: "mail"}
+		forgotPasswordRequestJson, _ := json.Marshal(forgotPasswordRequest)
+
+		userServiceMock := mockservice.NewMockUserService(ctrl)
+		//userServiceMock.EXPECT().ForgotPassword(gomock.Any(), forgotPasswordRequest)
+
+		req := httptest.NewRequest(http.MethodPut, "/api/users/forgot-password", bytes.NewReader(forgotPasswordRequestJson))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderAuthorization, "Bearer "+generateToken(t))
+		rec := httptest.NewRecorder()
+
+		handler := NewUserManagementHandler(handler, userServiceMock)
+
+		e.PUT("/api/users/forgot-password", handler.ForgotPassword)
+		e.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+	})
+
+	t.Run("Failed to update password due to email doesn't exists", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		forgotPasswordRequest := v1.ForgotPasswordRequest{Email: "mail@johndoe.com"}
+		forgotPasswordRequestJson, _ := json.Marshal(forgotPasswordRequest)
+
+		userServiceMock := mockservice.NewMockUserService(ctrl)
+		userServiceMock.EXPECT().ForgotPassword(gomock.Any(), forgotPasswordRequest).Return(errors2.ErrUserDoesNotExists).Times(1)
+
+		req := httptest.NewRequest(http.MethodPut, "/api/users/forgot-password", bytes.NewReader(forgotPasswordRequestJson))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderAuthorization, "Bearer "+generateToken(t))
+		rec := httptest.NewRecorder()
+
+		handler := NewUserManagementHandler(handler, userServiceMock)
+
+		e.PUT("/api/users/forgot-password", handler.ForgotPassword)
+		e.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNotAcceptable, rec.Code)
+
+	})
+
+	t.Run("Failed to update password due to other error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		forgotPasswordRequest := v1.ForgotPasswordRequest{Email: "mail@johndoe.com"}
+		forgotPasswordRequestJson, _ := json.Marshal(forgotPasswordRequest)
+
+		userServiceMock := mockservice.NewMockUserService(ctrl)
+		userServiceMock.EXPECT().ForgotPassword(gomock.Any(), forgotPasswordRequest).Return(errors.New("Database error")).Times(1)
+
+		req := httptest.NewRequest(http.MethodPut, "/api/users/forgot-password", bytes.NewReader(forgotPasswordRequestJson))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderAuthorization, "Bearer "+generateToken(t))
+		rec := httptest.NewRecorder()
+
+		handler := NewUserManagementHandler(handler, userServiceMock)
+
+		e.PUT("/api/users/forgot-password", handler.ForgotPassword)
+		e.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+
+	})
+
+}
+
 func TestAuthorManagementHandler_ChangePasswordSuccess(t *testing.T) {
 
 	controller := gomock.NewController(t)
@@ -161,10 +257,10 @@ func TestUserRequestHandler_List(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
 		mockUserService := mockservice.NewMockUserService(ctrl)
-		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&ito.ListQueryResult[v1.UserDataResponse]{
+		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&ito.ListQueryResult[ito.UserDataResponse]{
 			TotalPage: 1,
 			Page:      1,
-			Items: []v1.UserDataResponse{
+			Items: []ito.UserDataResponse{
 				{
 					Id:       1,
 					FullName: "Frans Filasta Pratama",
@@ -196,7 +292,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 			panic(err)
 		}
 
-		var users ito.ListQueryResult[v1.UserDataResponse]
+		var users ito.ListQueryResult[ito.UserDataResponse]
 		unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
 
 		if unmarshalErr != nil {
@@ -215,10 +311,10 @@ func TestUserRequestHandler_List(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
 		mockUserService := mockservice.NewMockUserService(ctrl)
-		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&ito.ListQueryResult[v1.UserDataResponse]{
+		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&ito.ListQueryResult[ito.UserDataResponse]{
 			TotalPage: 1,
 			Page:      1,
-			Items: []v1.UserDataResponse{
+			Items: []ito.UserDataResponse{
 				{
 					Id:       1,
 					FullName: "Frans Filasta Pratama",
@@ -236,7 +332,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 			panic(err)
 		}
 
-		var users ito.ListQueryResult[v1.UserDataResponse]
+		var users ito.ListQueryResult[ito.UserDataResponse]
 		unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
 
 		if unmarshalErr != nil {
@@ -278,6 +374,7 @@ func TestUserManagementHandler_UpdateSuccess(t *testing.T) {
 		FullName: "John Snow",
 		Email:    "mail@johnsnow.techx",
 		Role:     "editor",
+		Password: "Password",
 	}
 
 	userJSON, _ := json.Marshal(userUpdateRequest)

@@ -17,3 +17,11 @@ type ChangePasswordQuery struct {
 	UserId   uint
 	Password string
 }
+
+type UserDataResponse struct {
+	Id       uint   `json:"id"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Avatar   string `json:"avatar,omitempty"`
+	Role     string `json:"role"`
+}

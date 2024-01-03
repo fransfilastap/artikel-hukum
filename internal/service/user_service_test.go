@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 
 	logger = log.NewLog(conf)
 
-	service = Service{logger: nil}
+	service = Service{logger: logger}
 
 	code := m.Run()
 	fmt.Println("test end")
@@ -302,6 +302,38 @@ func TestUserService_ChangePasswordByNonAdmin(t *testing.T) {
 		})
 
 		assert.Error(t, err)
+
+	})
+}
+
+func TestUserService_ForgotPassword(t *testing.T) {
+
+	t.Run("Success change password", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		userRepoMock := mock_repository.NewMockUserRepository(ctrl)
+		userRepoMock.EXPECT().FindByEmail(gomock.Any(), "mail@johndoe.com").Return(&model.User{}, nil).Times(1)
+
+		svc := NewUserService(&service, userRepoMock)
+
+		err := svc.ForgotPassword(context.Background(), v1.ForgotPasswordRequest{Email: "mail@johndoe.com"})
+
+		assert.NoError(t, err)
+
+	})
+
+	t.Run("Change password while email doesn't registered", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		userRepoMock := mock_repository.NewMockUserRepository(ctrl)
+		userRepoMock.EXPECT().FindByEmail(gomock.Any(), "mail@johndoe.com").Return(nil, nil).Times(1)
+
+		svc := NewUserService(&service, userRepoMock)
+
+		err := svc.ForgotPassword(context.Background(), v1.ForgotPasswordRequest{Email: "mail@johndoe.com"})
+
+		assert.Error(t, err)
+		assert.Error(t, errors.ErrUserDoesNotExists, err)
 
 	})
 }

@@ -129,10 +129,10 @@ func (mr *MockUserServiceMockRecorder) ForgotPassword(ctx, request any) *gomock.
 }
 
 // List mocks base method.
-func (m *MockUserService) List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[v1.UserDataResponse], error) {
+func (m *MockUserService) List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[ito.UserDataResponse], error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, query)
-	ret0, _ := ret[0].(*ito.ListQueryResult[v1.UserDataResponse])
+	ret0, _ := ret[0].(*ito.ListQueryResult[ito.UserDataResponse])
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

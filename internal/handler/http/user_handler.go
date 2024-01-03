@@ -135,13 +135,23 @@ func (h *UserManagementHandler) ChangePasswordByNonAdmin(ctx echo.Context) error
 
 }
 
-func (h *UserManagementHandler) ChangePasswordByAdmin(ctx echo.Context) error {
-	panic("implement me")
-}
-
 func (h *UserManagementHandler) ForgotPassword(ctx echo.Context) error {
-	// 1. Check user/author with submitted email exist in database
-	// 2. if exists send reset password link
-	// 3. if doesn't exist return err
-	return nil
+
+	var forgotRequest v1.ForgotPasswordRequest
+	if err := ctx.Bind(&forgotRequest); err != nil {
+		return echo.NewHTTPError(http.StatusNotAcceptable, err)
+	}
+
+	if err := ctx.Validate(forgotRequest); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	if err := h.userService.ForgotPassword(ctx.Request().Context(), forgotRequest); err != nil {
+		if errors.Is(err, pkgerror.ErrUserDoesNotExists) {
+			return echo.NewHTTPError(http.StatusNotAcceptable, err)
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }

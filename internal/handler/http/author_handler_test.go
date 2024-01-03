@@ -169,7 +169,7 @@ func TestAuthorManagementHandler_List(t *testing.T) {
 	e.GET("/api/authors", handler.List)
 	e.ServeHTTP(rec, req)
 
-	var users ito.ListQueryResult[v1.UserDataResponse]
+	var users ito.ListQueryResult[ito.UserDataResponse]
 	unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
 
 	if unmarshalErr != nil {

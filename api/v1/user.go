@@ -1,13 +1,5 @@
 package v1
 
-type UserDataResponse struct {
-	Id       uint   `json:"id"`
-	FullName string `json:"full_name"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar,omitempty"`
-	Role     string `json:"role"`
-}
-
 type CreateUserRequest struct {
 	FullName string `json:"full_name" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
@@ -21,6 +13,7 @@ type UpdateUserRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Role     string `json:"role" validate:"required"`
 	Avatar   string `json:"avatar"`
+	Password string `json:"password,omitempty"`
 }
 
 type ForgotPasswordRequest struct {
