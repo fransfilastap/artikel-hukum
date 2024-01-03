@@ -2,7 +2,8 @@ package service
 
 import (
 	v1 "bphn/artikel-hukum/api/v1"
-	"bphn/artikel-hukum/internal/dto"
+	"bphn/artikel-hukum/internal/errors"
+	"bphn/artikel-hukum/internal/ito"
 	"bphn/artikel-hukum/internal/model"
 	mock_repository "bphn/artikel-hukum/internal/repository/mocks"
 	"bphn/artikel-hukum/pkg/config"
@@ -12,6 +13,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"os"
 	"testing"
@@ -47,7 +49,7 @@ func TestUserService_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	query := dto.ListQuery{
+	query := ito.ListQuery{
 		Page:   1,
 		Size:   10,
 		Sort:   "+id",
@@ -55,7 +57,7 @@ func TestUserService_List(t *testing.T) {
 	}
 
 	repo := mock_repository.NewMockUserRepository(ctrl)
-	repo.EXPECT().FindAll(gomock.Any(), query).Return(&dto.ListQueryResult[model.User]{
+	repo.EXPECT().FindAll(gomock.Any(), query).Return(&ito.ListQueryResult[model.User]{
 		TotalPage: 1,
 		Page:      1,
 		Items: []model.User{
@@ -154,7 +156,6 @@ func TestUserService_Update(t *testing.T) {
 			Id:       12,
 			FullName: "john doe",
 			Email:    "mail@johndoe.com",
-			Password: "12345678",
 			Role:     "author",
 		}
 
@@ -179,17 +180,16 @@ func TestUserService_Update(t *testing.T) {
 			Id:       12,
 			FullName: "john doe",
 			Email:    "mail@johndoe.com",
-			Password: "12345678",
 			Role:     "author",
 		}
 
 		repo.EXPECT().FindById(gomock.Any(), user.Id).Return(nil, nil).Times(1)
-		repo.EXPECT().Update(gomock.Any(), &model.User{}).Return(v1.ErrUserDoesNotExists).Times(0)
+		repo.EXPECT().Update(gomock.Any(), &model.User{}).Return(errors.ErrUserDoesNotExists).Times(0)
 
 		err := userService.Update(context.Background(), &user)
 
 		if err != nil {
-			assert.EqualError(t, v1.ErrUserDoesNotExists, err.Error())
+			assert.EqualError(t, errors.ErrUserDoesNotExists, err.Error())
 			return
 		}
 
@@ -240,4 +240,73 @@ func TestUserService_FindById(t *testing.T) {
 		assert.Equal(t, uint(12), user.Id)
 		assert.Equal(t, "John Doe", user.FullName)
 	}
+}
+
+func TestUserService_ChangePasswordByNonAdmin(t *testing.T) {
+	t.Run("Success change password, old password is correct", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		userIndRecord := model.User{
+			Id:              12,
+			FullName:        "John Doe",
+			Password:        hashPassword("12345678"),
+			Email:           "",
+			EmailVerifiedAt: time.Time{},
+			Avatar:          "",
+			Role:            "",
+			CreatedAt:       time.Time{},
+			UpdatedAt:       time.Time{},
+			DeletedAt:       gorm.DeletedAt{},
+		}
+
+		mockRepo := mock_repository.NewMockUserRepository(ctrl)
+		mockRepo.EXPECT().FindById(gomock.Any(), uint(12)).Return(&userIndRecord, nil).Times(1)
+		mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+		userService := NewUserService(&service, mockRepo)
+
+		err := userService.ChangePasswordByNonAdmin(context.Background(), ito.ChangePasswordQuery{
+			UserId:   12,
+			Password: "12345678",
+		})
+
+		assert.NoError(t, err)
+
+	})
+
+	t.Run("Failed to change password due to old password is incorrect", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		userIndRecord := model.User{
+			Id:              12,
+			FullName:        "John Doe",
+			Password:        hashPassword("12345678"),
+			Email:           "",
+			EmailVerifiedAt: time.Time{},
+			Avatar:          "",
+			Role:            "",
+			CreatedAt:       time.Time{},
+			UpdatedAt:       time.Time{},
+			DeletedAt:       gorm.DeletedAt{},
+		}
+
+		mockRepo := mock_repository.NewMockUserRepository(ctrl)
+		mockRepo.EXPECT().FindById(gomock.Any(), uint(12)).Return(&userIndRecord, nil).Times(1)
+		mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.ErrOldPasswordIncorrect).Times(0)
+
+		userService := NewUserService(&service, mockRepo)
+
+		err := userService.ChangePasswordByNonAdmin(context.Background(), ito.ChangePasswordQuery{
+			UserId:   12,
+			Password: "12345679",
+		})
+
+		assert.Error(t, err)
+
+	})
+}
+
+func hashPassword(password string) string {
+	pass, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(pass)
 }

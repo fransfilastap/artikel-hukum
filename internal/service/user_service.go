@@ -2,7 +2,8 @@ package service
 
 import (
 	"bphn/artikel-hukum/api/v1"
-	"bphn/artikel-hukum/internal/dto"
+	"bphn/artikel-hukum/internal/errors"
+	"bphn/artikel-hukum/internal/ito"
 	"bphn/artikel-hukum/internal/model"
 	"bphn/artikel-hukum/internal/repository"
 	"context"
@@ -12,12 +13,14 @@ import (
 )
 
 type UserService interface {
-	List(ctx context.Context, query dto.ListQuery) (*dto.ListQueryResult[v1.UserDataResponse], error)
+	List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[v1.UserDataResponse], error)
 	FindById(ctx context.Context, id uint) (*model.User, error)
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
 	Create(ctx context.Context, request *v1.CreateUserRequest) error
 	Update(ctx context.Context, request *v1.UpdateUserRequest) error
 	Delete(ctx context.Context, request uint) error
+	ChangePasswordByNonAdmin(ctx context.Context, request ito.ChangePasswordQuery) error
+	ForgotPassword(ctx context.Context, request v1.ForgotPasswordRequest) error
 }
 
 type userService struct {
@@ -32,7 +35,7 @@ func NewUserService(service *Service, userRepository repository.UserRepository) 
 	}
 }
 
-func (u *userService) List(ctx context.Context, query dto.ListQuery) (*dto.ListQueryResult[v1.UserDataResponse], error) {
+func (u *userService) List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[v1.UserDataResponse], error) {
 	users, err := u.repository.FindAll(ctx, query)
 	if err != nil {
 		return nil, err
@@ -41,10 +44,10 @@ func (u *userService) List(ctx context.Context, query dto.ListQuery) (*dto.ListQ
 	userDataResponses := make([]v1.UserDataResponse, 0)
 
 	for _, user := range users.Items {
-		userDataResponses = append(userDataResponses, mapToUserDataResponse(user))
+		userDataResponses = append(userDataResponses, toUserDataResponse(user))
 	}
 
-	return &dto.ListQueryResult[v1.UserDataResponse]{
+	return &ito.ListQueryResult[v1.UserDataResponse]{
 		TotalPage: users.TotalPage,
 		Page:      users.Page,
 		Items:     userDataResponses,
@@ -60,7 +63,7 @@ func (u *userService) Create(ctx context.Context, request *v1.CreateUserRequest)
 	}
 
 	if user != nil {
-		return v1.ErrEmailAlreadyExists
+		return errors.ErrEmailAlreadyExists
 	}
 
 	fmt.Println("user")
@@ -71,7 +74,7 @@ func (u *userService) Create(ctx context.Context, request *v1.CreateUserRequest)
 	}
 
 	request.Password = string(password)
-	mUser := mapRequestToModel(request)
+	mUser := toModel(request)
 
 	if err := u.repository.Create(ctx, mUser); err != nil {
 		return err
@@ -84,7 +87,7 @@ func (u *userService) Create(ctx context.Context, request *v1.CreateUserRequest)
 func (u *userService) Update(ctx context.Context, request *v1.UpdateUserRequest) error {
 
 	if user, err := u.repository.FindById(ctx, request.Id); err == nil && user == nil {
-		return v1.ErrUserDoesNotExists
+		return errors.ErrUserDoesNotExists
 	} else {
 		user.FullName = request.FullName
 		user.Email = request.Email
@@ -112,7 +115,45 @@ func (u *userService) FindByEmail(ctx context.Context, email string) (*model.Use
 	return u.repository.FindByEmail(ctx, email)
 }
 
-func mapToUserDataResponse(user model.User) v1.UserDataResponse {
+func (u *userService) ChangePasswordByNonAdmin(ctx context.Context, request ito.ChangePasswordQuery) error {
+
+	user, err := u.repository.FindById(ctx, request.UserId)
+	if err != nil {
+		return err
+	}
+
+	if user == nil {
+		return errors.ErrUserDoesNotExists
+	}
+
+	newPassword := []byte(request.Password)
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), newPassword); err != nil {
+		return errors.ErrOldPasswordIncorrect
+	}
+
+	hashedNewPassword, hErr := bcrypt.GenerateFromPassword(newPassword, bcrypt.DefaultCost)
+
+	if hErr != nil {
+		return hErr
+	}
+
+	user.Password = string(hashedNewPassword)
+
+	if err := u.repository.Update(ctx, user); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (u *userService) ForgotPassword(ctx context.Context, request v1.ForgotPasswordRequest) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func toUserDataResponse(user model.User) v1.UserDataResponse {
 	return v1.UserDataResponse{
 		Id:       user.Id,
 		FullName: user.FullName,
@@ -131,11 +172,10 @@ func generatePasswordHash(password string) (string, error) {
 	return string(hashed), nil
 }
 
-func mapRequestToModel(request *v1.CreateUserRequest) *model.User {
-	hashed, _ := generatePasswordHash(request.Password)
+func toModel(request *v1.CreateUserRequest) *model.User {
 	return &model.User{
 		FullName: request.FullName,
-		Password: hashed,
+		Password: request.Password,
 		Email:    request.Email,
 		Role:     model.Role(request.Role),
 	}

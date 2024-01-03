@@ -11,7 +11,7 @@ package mock_service
 
 import (
 	v1 "bphn/artikel-hukum/api/v1"
-	dto "bphn/artikel-hukum/internal/dto"
+	dto "bphn/artikel-hukum/internal/ito"
 	context "context"
 	reflect "reflect"
 
@@ -39,20 +39,6 @@ func NewMockAuthorService(ctrl *gomock.Controller) *MockAuthorService {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAuthorService) EXPECT() *MockAuthorServiceMockRecorder {
 	return m.recorder
-}
-
-// ForgotPassword mocks base method.
-func (m *MockAuthorService) ForgotPassword(ctx context.Context, request v1.ForgotPasswordRequest) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ForgotPassword", ctx, request)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ForgotPassword indicates an expected call of ForgotPassword.
-func (mr *MockAuthorServiceMockRecorder) ForgotPassword(ctx, request any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForgotPassword", reflect.TypeOf((*MockAuthorService)(nil).ForgotPassword), ctx, request)
 }
 
 // List mocks base method.

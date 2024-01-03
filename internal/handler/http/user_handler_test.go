@@ -2,18 +2,93 @@ package http
 
 import (
 	"bphn/artikel-hukum/api/v1"
-	"bphn/artikel-hukum/internal/dto"
+	errors2 "bphn/artikel-hukum/internal/errors"
+	"bphn/artikel-hukum/internal/ito"
+	"bphn/artikel-hukum/internal/middleware"
+	"bphn/artikel-hukum/internal/server"
 	mockservice "bphn/artikel-hukum/internal/service/mocks"
+	"bphn/artikel-hukum/pkg/config"
+	pkgjwt "bphn/artikel-hukum/pkg/jwt"
+	"bphn/artikel-hukum/pkg/log"
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
+
+var (
+	logger  *log.Logger
+	handler *Handler
+	e       *echo.Echo
+	jwt     *pkgjwt.JWT
+)
+
+func TestMain(m *testing.M) {
+	err := os.Setenv("APP_CONF", "../../../config/local.yml")
+	if err != nil {
+		fmt.Println("Setenv error", err)
+	}
+	var envConf = flag.String("conf", "config/local.yml", "config path, eg: -conf ./config/local.yml")
+	flag.Parse()
+	conf := config.NewConfig(*envConf)
+
+	logger = log.NewLog(conf)
+	handler = NewHandler(conf, logger)
+
+	e = echo.New()
+	server.SetupValidator(e)
+
+	jwt = pkgjwt.NewJwt(conf)
+
+	// register middlewares
+	middleware.SetupMiddleware(conf, logger, e)
+
+	if err != nil {
+		return
+	}
+
+	code := m.Run()
+	fmt.Println("test end")
+
+	os.Exit(code)
+
+}
+
+func TestAuthorManagementHandler_ChangePasswordSuccess(t *testing.T) {
+
+	controller := gomock.NewController(t)
+
+	password := v1.ChangePasswordRequest{
+		CurrentPassword: "12345678",
+		NewPassword:     "87654321",
+	}
+
+	requestJSON, _ := json.Marshal(password)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/users/change-password", bytes.NewReader(requestJSON))
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+generateToken(t))
+	rec := httptest.NewRecorder()
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+	userServiceMock := mockservice.NewMockUserService(controller)
+	userServiceMock.EXPECT().ChangePasswordByNonAdmin(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+	handler := NewUserManagementHandler(handler, userServiceMock)
+
+	e.PUT("/api/users/change-password", handler.ChangePasswordByNonAdmin)
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+}
 
 func TestUserRequestHandler_Create(t *testing.T) {
 
@@ -34,7 +109,6 @@ func TestUserRequestHandler_Create(t *testing.T) {
 		c := e.NewContext(req, rec)
 
 		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 
 		mockService := mockservice.NewMockUserService(ctrl)
 		mockService.EXPECT().Create(c.Request().Context(), gomock.Any()).Return(nil).AnyTimes()
@@ -63,7 +137,6 @@ func TestUserRequestHandler_Create(t *testing.T) {
 		c := e.NewContext(req, rec)
 
 		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 
 		mockService := mockservice.NewMockUserService(ctrl)
 		mockService.EXPECT().Create(gomock.Any(), userRequest).Return(errors.New("validation error")).AnyTimes()
@@ -86,10 +159,9 @@ func TestUserRequestHandler_List(t *testing.T) {
 		c := e.NewContext(req, rec)
 
 		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 
 		mockUserService := mockservice.NewMockUserService(ctrl)
-		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&dto.ListQueryResult[v1.UserDataResponse]{
+		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&ito.ListQueryResult[v1.UserDataResponse]{
 			TotalPage: 1,
 			Page:      1,
 			Items: []v1.UserDataResponse{
@@ -124,7 +196,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 			panic(err)
 		}
 
-		var users dto.ListQueryResult[v1.UserDataResponse]
+		var users ito.ListQueryResult[v1.UserDataResponse]
 		unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
 
 		if unmarshalErr != nil {
@@ -141,10 +213,9 @@ func TestUserRequestHandler_List(t *testing.T) {
 		c := e.NewContext(req, rec)
 
 		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 
 		mockUserService := mockservice.NewMockUserService(ctrl)
-		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&dto.ListQueryResult[v1.UserDataResponse]{
+		mockUserService.EXPECT().List(c.Request().Context(), gomock.Any()).Return(&ito.ListQueryResult[v1.UserDataResponse]{
 			TotalPage: 1,
 			Page:      1,
 			Items: []v1.UserDataResponse{
@@ -165,7 +236,7 @@ func TestUserRequestHandler_List(t *testing.T) {
 			panic(err)
 		}
 
-		var users dto.ListQueryResult[v1.UserDataResponse]
+		var users ito.ListQueryResult[v1.UserDataResponse]
 		unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
 
 		if unmarshalErr != nil {
@@ -249,7 +320,7 @@ func TestUserManagementHandler_UpdateFailedDueToUserNotFound(t *testing.T) {
 	c.SetParamValues("1")
 
 	mockUserService := mockservice.NewMockUserService(ctrl)
-	mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(v1.ErrUserDoesNotExists).AnyTimes()
+	mockUserService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors2.ErrUserDoesNotExists).AnyTimes()
 
 	userHandler := NewUserManagementHandler(handler, mockUserService)
 

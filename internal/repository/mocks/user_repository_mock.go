@@ -10,7 +10,7 @@
 package mock_repository
 
 import (
-	dto "bphn/artikel-hukum/internal/dto"
+	dto "bphn/artikel-hukum/internal/ito"
 	model "bphn/artikel-hukum/internal/model"
 	context "context"
 	reflect "reflect"

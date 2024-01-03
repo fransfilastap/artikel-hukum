@@ -2,7 +2,8 @@ package http
 
 import (
 	v1 "bphn/artikel-hukum/api/v1"
-	"bphn/artikel-hukum/internal/dto"
+	"bphn/artikel-hukum/internal/errors"
+	"bphn/artikel-hukum/internal/ito"
 	mockservice "bphn/artikel-hukum/internal/service/mocks"
 	"bytes"
 	"encoding/json"
@@ -18,7 +19,6 @@ import (
 
 func TestAuthorManagementHandler_Register(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	registrationRequest := v1.AuthorRegistrationRequest{
 		FullName:   "Frans Filasta Pratama",
@@ -47,7 +47,6 @@ func TestAuthorManagementHandler_Register(t *testing.T) {
 
 func TestAuthorManagementHandler_RegisterFailed(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	registrationRequest := v1.AuthorRegistrationRequest{
 		FullName:   "John Doe",
@@ -64,7 +63,7 @@ func TestAuthorManagementHandler_RegisterFailed(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 	authorService := mockservice.NewMockAuthorService(ctrl)
-	authorService.EXPECT().Register(gomock.Any(), registrationRequest).Return(v1.ErrEmailAlreadyExists).AnyTimes()
+	authorService.EXPECT().Register(gomock.Any(), registrationRequest).Return(errors.ErrEmailAlreadyExists).AnyTimes()
 
 	handler := NewAuthorManagementHandler(handler, authorService)
 
@@ -75,7 +74,6 @@ func TestAuthorManagementHandler_RegisterFailed(t *testing.T) {
 
 func TestAuthorManagementHandler_GetProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	want := v1.AuthorProfileDataResponse{
 		Id:         12,
@@ -106,7 +104,6 @@ func TestAuthorManagementHandler_GetProfile(t *testing.T) {
 
 func TestAuthorManagementHandler_UpdateProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	updateRequest := v1.UpdateAuthorProfileRequest{
 		Id:         12,
@@ -149,14 +146,13 @@ func generateToken(t *testing.T) string {
 func TestAuthorManagementHandler_List(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/authors?page=1&size=2", nil)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer "+generateToken(t))
 	rec := httptest.NewRecorder()
 
 	authorService := mockservice.NewMockAuthorService(ctrl)
-	authorService.EXPECT().List(gomock.Any(), gomock.Any()).Return(dto.ListQueryResult[v1.AuthorProfileDataResponse]{
+	authorService.EXPECT().List(gomock.Any(), gomock.Any()).Return(ito.ListQueryResult[v1.AuthorProfileDataResponse]{
 		TotalPage: 2,
 		Page:      1,
 		Items: []v1.AuthorProfileDataResponse{{
@@ -173,7 +169,7 @@ func TestAuthorManagementHandler_List(t *testing.T) {
 	e.GET("/api/authors", handler.List)
 	e.ServeHTTP(rec, req)
 
-	var users dto.ListQueryResult[v1.UserDataResponse]
+	var users ito.ListQueryResult[v1.UserDataResponse]
 	unmarshalErr := json.Unmarshal(rec.Body.Bytes(), &users)
 
 	if unmarshalErr != nil {

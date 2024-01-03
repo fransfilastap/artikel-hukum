@@ -25,7 +25,3 @@ type UpdateAuthorProfileRequest struct {
 	Occupation string `json:"occupation" validate:"required"`
 	Company    string `json:"company" validate:"required"`
 }
-
-type ForgotPasswordRequest struct {
-	Email string `json:"email" validate:"required,email"`
-}

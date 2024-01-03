@@ -2,8 +2,10 @@ package http
 
 import (
 	"bphn/artikel-hukum/api/v1"
-	"bphn/artikel-hukum/internal/dto"
+	pkgerror "bphn/artikel-hukum/internal/errors"
+	"bphn/artikel-hukum/internal/ito"
 	"bphn/artikel-hukum/internal/service"
+	"bphn/artikel-hukum/internal/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -21,7 +23,7 @@ func NewUserManagementHandler(handler *Handler, userService service.UserService)
 
 func (h *UserManagementHandler) List(ctx echo.Context) error {
 
-	var request dto.ListQuery
+	var request ito.ListQuery
 	if err := ctx.Bind(&request); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
@@ -83,7 +85,7 @@ func (h *UserManagementHandler) Update(ctx echo.Context) error {
 	}
 
 	if err := h.userService.Update(ctx.Request().Context(), &updateRequest); err != nil {
-		if errors.Is(err, v1.ErrUserDoesNotExists) {
+		if errors.Is(err, pkgerror.ErrUserDoesNotExists) {
 			return echo.NewHTTPError(http.StatusNotFound)
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
@@ -105,6 +107,36 @@ func (h *UserManagementHandler) Delete(ctx echo.Context) error {
 
 	return ctx.NoContent(http.StatusNoContent)
 
+}
+
+func (h *UserManagementHandler) ChangePasswordByNonAdmin(ctx echo.Context) error {
+
+	userId := utils.GetUserIdFromCtx(ctx)
+	var request v1.ChangePasswordRequest
+
+	if err := ctx.Bind(&request); err != nil {
+		return echo.NewHTTPError(http.StatusNotAcceptable, err)
+	}
+
+	if err := ctx.Validate(request); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	changePassword := ito.ChangePasswordQuery{
+		UserId:   userId,
+		Password: request.NewPassword,
+	}
+
+	if err := h.userService.ChangePasswordByNonAdmin(ctx.Request().Context(), changePassword); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (h *UserManagementHandler) ChangePasswordByAdmin(ctx echo.Context) error {
+	panic("implement me")
 }
 
 func (h *UserManagementHandler) ForgotPassword(ctx echo.Context) error {

@@ -11,7 +11,7 @@ package mock_service
 
 import (
 	v1 "bphn/artikel-hukum/api/v1"
-	dto "bphn/artikel-hukum/internal/dto"
+	ito "bphn/artikel-hukum/internal/ito"
 	model "bphn/artikel-hukum/internal/model"
 	context "context"
 	reflect "reflect"
@@ -40,6 +40,20 @@ func NewMockUserService(ctrl *gomock.Controller) *MockUserService {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 	return m.recorder
+}
+
+// ChangePasswordByNonAdmin mocks base method.
+func (m *MockUserService) ChangePasswordByNonAdmin(ctx context.Context, request ito.ChangePasswordQuery) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ChangePasswordByNonAdmin", ctx, request)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ChangePasswordByNonAdmin indicates an expected call of ChangePasswordByNonAdmin.
+func (mr *MockUserServiceMockRecorder) ChangePasswordByNonAdmin(ctx, request any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePasswordByNonAdmin", reflect.TypeOf((*MockUserService)(nil).ChangePasswordByNonAdmin), ctx, request)
 }
 
 // Create mocks base method.
@@ -100,11 +114,25 @@ func (mr *MockUserServiceMockRecorder) FindById(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockUserService)(nil).FindById), ctx, id)
 }
 
+// ForgotPassword mocks base method.
+func (m *MockUserService) ForgotPassword(ctx context.Context, request v1.ForgotPasswordRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ForgotPassword", ctx, request)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ForgotPassword indicates an expected call of ForgotPassword.
+func (mr *MockUserServiceMockRecorder) ForgotPassword(ctx, request any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForgotPassword", reflect.TypeOf((*MockUserService)(nil).ForgotPassword), ctx, request)
+}
+
 // List mocks base method.
-func (m *MockUserService) List(ctx context.Context, query dto.ListQuery) (*dto.ListQueryResult[v1.UserDataResponse], error) {
+func (m *MockUserService) List(ctx context.Context, query ito.ListQuery) (*ito.ListQueryResult[v1.UserDataResponse], error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, query)
-	ret0, _ := ret[0].(*dto.ListQueryResult[v1.UserDataResponse])
+	ret0, _ := ret[0].(*ito.ListQueryResult[v1.UserDataResponse])
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -1,4 +1,4 @@
-package dto
+package ito
 
 type ListQuery struct {
 	Page   int    `query:"page"`
@@ -11,4 +11,9 @@ type ListQueryResult[T any] struct {
 	TotalPage int `json:"total_page"`
 	Page      int `json:"page"`
 	Items     []T `json:"items"`
+}
+
+type ChangePasswordQuery struct {
+	UserId   uint
+	Password string
 }

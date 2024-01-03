@@ -2,14 +2,13 @@ package service
 
 import (
 	v1 "bphn/artikel-hukum/api/v1"
-	"bphn/artikel-hukum/internal/dto"
+	"bphn/artikel-hukum/internal/ito"
 	"context"
 )
 
 type AuthorService interface {
-	List(ctx context.Context, query dto.ListQuery) (dto.ListQueryResult[v1.AuthorProfileDataResponse], error)
+	List(ctx context.Context, query ito.ListQuery) (ito.ListQueryResult[v1.AuthorProfileDataResponse], error)
 	Register(ctx context.Context, request v1.AuthorRegistrationRequest) error
-	ForgotPassword(ctx context.Context, request v1.ForgotPasswordRequest) error
 	UpdateProfile(ctx context.Context, request v1.UpdateAuthorProfileRequest) error
 	Profile(ctx context.Context, Id uint) (v1.AuthorProfileDataResponse, error)
 }
@@ -22,27 +21,32 @@ func NewAuthorService(service *Service) AuthorService {
 	return &authorService{service}
 }
 
-func (a authorService) List(ctx context.Context, query dto.ListQuery) (dto.ListQueryResult[v1.AuthorProfileDataResponse], error) {
+func (a *authorService) List(ctx context.Context, query ito.ListQuery) (ito.ListQueryResult[v1.AuthorProfileDataResponse], error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a authorService) Register(ctx context.Context, request v1.AuthorRegistrationRequest) error {
+func (a *authorService) Register(ctx context.Context, request v1.AuthorRegistrationRequest) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a authorService) ForgotPassword(ctx context.Context, request v1.ForgotPasswordRequest) error {
+func (a *authorService) ForgotPassword(ctx context.Context, request v1.ForgotPasswordRequest) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a authorService) UpdateProfile(ctx context.Context, request v1.UpdateAuthorProfileRequest) error {
+func (a *authorService) UpdateProfile(ctx context.Context, request v1.UpdateAuthorProfileRequest) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a authorService) Profile(ctx context.Context, Id uint) (v1.AuthorProfileDataResponse, error) {
+func (a *authorService) Profile(ctx context.Context, Id uint) (v1.AuthorProfileDataResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *authorService) ChangePassword(ctx context.Context, request v1.ChangePasswordRequest) error {
 	//TODO implement me
 	panic("implement me")
 }

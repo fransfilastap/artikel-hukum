@@ -2,7 +2,8 @@ package http
 
 import (
 	v1 "bphn/artikel-hukum/api/v1"
-	"bphn/artikel-hukum/internal/dto"
+	errors2 "bphn/artikel-hukum/internal/errors"
+	"bphn/artikel-hukum/internal/ito"
 	"bphn/artikel-hukum/internal/service"
 	"bphn/artikel-hukum/internal/utils"
 	"errors"
@@ -36,8 +37,8 @@ func (h *AuthorManagementHandler) Register(ctx echo.Context) error {
 	}
 
 	if err := h.authorService.Register(ctx.Request().Context(), registrationRequest); err != nil {
-		if errors.Is(err, v1.ErrEmailAlreadyExists) {
-			return ctx.JSON(http.StatusConflict, v1.ErrEmailAlreadyExists)
+		if errors.Is(err, errors2.ErrEmailAlreadyExists) {
+			return ctx.JSON(http.StatusConflict, errors2.ErrEmailAlreadyExists)
 		}
 
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
@@ -77,7 +78,7 @@ func (h *AuthorManagementHandler) UpdateProfile(ctx echo.Context) error {
 }
 
 func (h *AuthorManagementHandler) List(ctx echo.Context) error {
-	var listQuery dto.ListQuery
+	var listQuery ito.ListQuery
 
 	if err := ctx.Bind(&listQuery); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
